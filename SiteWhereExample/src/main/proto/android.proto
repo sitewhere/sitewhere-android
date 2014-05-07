@@ -1,0 +1,25 @@
+option optimize_for = LITE_RUNTIME;
+
+package com.sitewhere.android.generated;
+
+// Google Protocol Buffer for 'Android Default'.
+// Generated on 2014.05.07 01:23:02 EDT
+message AndroidSpecification {
+
+	enum Command {PING = 1; TESTEVENTS = 2; CHANGEBACKGROUND = 3; }
+
+	message _Header {
+		required Command command = 1;
+		optional string originator = 2;
+	}
+
+	message ping {
+	}
+
+	message testEvents {
+	}
+
+	message changeBackground {
+		required string color = 1;
+	}
+}

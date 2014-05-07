@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.sitewhere.android</groupId>
+	<artifactId>example</artifactId>
+	<packaging>jar</packaging>
+	<version>0.9.6</version>
+	<name>SiteWhere Android Example</name>
+	<description>Example Maven project that generates</description>
+	<url>http://www.sitewhere.org/</url>
+
+	<properties>
+		<protobuf.version>2.5.0</protobuf.version>
+		<log4j.version>1.2.15</log4j.version>
+	</properties>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>protoc-plugin</id>
+			<url>http://sergei-ivanov.github.com/maven-protoc-plugin/repo/releases/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>${protobuf.version}</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<includes>
+						<include>src/proto/java/**/*.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.google.protobuf.tools</groupId>
+				<artifactId>maven-protoc-plugin</artifactId>
+				<version>0.3.2</version>
+				<configuration>
+					<protocExecutable>C:\Google\protobuf-2.5.0\bin\protoc.exe</protocExecutable>
+					<outputDirectory>${basedir}/src/proto/java</outputDirectory>
+					<checkStaleness>true</checkStaleness>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
