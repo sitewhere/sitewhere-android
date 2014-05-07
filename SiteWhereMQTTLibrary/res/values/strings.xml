@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">SiteWhere MQTT Library</string>
+
+    <!-- MQTT hostname preference -->
+    <string name="pref_mqtt_hostname">MQTT Hostname</string>
+    <string name="pref_mqtt_hostname_summary">Enter value for hostname of remote MQTT broker.</string>
+
+    <!-- MQTT port preference -->
+    <string name="pref_mqtt_port">MQTT Port</string>
+    <string name="pref_mqtt_port_summary">Enter port number of remote MQTT broker.</string>
+
+</resources>
