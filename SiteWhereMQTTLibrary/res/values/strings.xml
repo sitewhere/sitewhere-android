@@ -1,13 +1,24 @@
 <resources>
 
-    <string name="app_name">SiteWhere MQTT Library</string>
+    <string name="app_name">SiteWhere Settings</string>
 
-    <!-- MQTT hostname preference -->
-    <string name="pref_mqtt_hostname">MQTT Hostname</string>
-    <string name="pref_mqtt_hostname_summary">Enter value for hostname of remote MQTT broker.</string>
+    <!-- Dialog messages -->
+    <string name="sitewhere_no_network_title">Network Not Available</string>
+    <string name="sitewhere_no_network_message">SiteWhere requires a network connection to communicate with the remote server.</string>
 
-    <!-- MQTT port preference -->
-    <string name="pref_mqtt_port">MQTT Port</string>
-    <string name="pref_mqtt_port_summary">Enter port number of remote MQTT broker.</string>
+    <!-- SiteWhere hostname entry -->
+    <string name="sitewhere_api_title">SiteWhere Host Information</string>
+    <string name="sitewhere_api_label">Enter hostname for SiteWhere server including port number. (e.g. my.sitewhere.server:8080).</string>
+    <string name="sitewhere_api_submit">Verify</string>
+    <string name="sitewhere_api_verify_check_cd">SiteWhere API URL Verified</string>
+
+    <!-- SiteWhere MQTT entry -->
+    <string name="sitewhere_mqtt_title">MQTT Broker Information</string>
+    <string name="sitewhere_mqtt_label">Enter hostname for MQTT broker including port number. (e.g. my.sitewhere.server:1883).</string>
+    <string name="sitewhere_mqtt_submit">Verify</string>
+    <string name="sitewhere_mqtt_verify_check_cd">SiteWhere API URL Verified</string>
+    
+    <!-- MQTT settings fragment -->
+    <string name="mqtt_hostname_title">MQTT Hostname</string>
 
 </resources>

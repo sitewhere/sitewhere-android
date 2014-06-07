@@ -102,9 +102,11 @@ public class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 */
 	public void sendMeasurement(String hardwareId, String originator, String name, double value)
 			throws SiteWhereMessagingException {
-		SiteWhere.DeviceMeasurement.Builder mb = SiteWhere.DeviceMeasurement.newBuilder();
-		mb.setHardwareId(hardwareId).setMeasurementId(name).setMeasurementValue(value);
-		sendMessage(Command.DEVICEMEASUREMENT, mb.build(), originator, "measurement");
+		SiteWhere.DeviceMeasurements.Builder mxsb = SiteWhere.DeviceMeasurements.newBuilder();
+		SiteWhere.Measurement.Builder mxb = SiteWhere.Measurement.newBuilder();
+		mxb.setMeasurementId(name).setMeasurementValue(value);
+		mxsb.addMeasurement(mxb.build());
+		sendMessage(Command.DEVICEMEASUREMENT, mxsb.build(), originator, "measurement");
 	}
 
 	/**
@@ -161,7 +163,14 @@ public class SiteWhereProtobufActivity extends SiteWhereActivity {
 			}
 			builder.build().writeDelimitedTo(out);
 			message.writeDelimitedTo(out);
-			sendCommand(out.toByteArray());
+			byte[] encoded = out.toByteArray();
+			StringBuffer hex = new StringBuffer();
+			for (byte current : encoded) {
+				hex.append(String.format("%02X ", current));
+				hex.append(" ");
+			}
+			Log.d(TAG, hex.toString());
+			sendCommand(encoded);
 		} catch (IOException e) {
 			throw new SiteWhereMessagingException("Problem encoding " + label + " message.", e);
 		} catch (Exception e) {

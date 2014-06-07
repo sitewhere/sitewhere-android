@@ -18,15 +18,11 @@ package com.sitewhere.android.example;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 
 import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
@@ -56,12 +52,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.sitewhere_main);
-
-		if (savedInstanceState == null) {
-			getFragmentManager().beginTransaction().add(R.id.container, new RegsitrationFragment())
-					.commit();
-		}
+		setContentView(R.layout.sitewhere_setup);
 	}
 
 	/*
@@ -84,22 +75,22 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 
-		Button connect = (Button) findViewById(R.id.sw_reg_connect);
-		connect.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				onConnectButtonClicked(v);
-			}
-		});
-
-		Button disconnect = (Button) findViewById(R.id.sw_reg_disconnect);
-		disconnect.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-			}
-		});
+		// Button connect = (Button) findViewById(R.id.sw_reg_connect);
+		// connect.setOnClickListener(new View.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(View v) {
+		// onConnectButtonClicked(v);
+		// }
+		// });
+		//
+		// Button disconnect = (Button) findViewById(R.id.sw_reg_disconnect);
+		// disconnect.setOnClickListener(new View.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(View v) {
+		// }
+		// });
 	}
 
 	/**
@@ -163,6 +154,11 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 			break;
 		}
 		}
+		try {
+			sendLocation(getUniqueDeviceId(), null, 1.0, 1.0, 1.0);
+		} catch (SiteWhereMessagingException e) {
+			Log.e(TAG, "Unable to send location.", e);
+		}
 	}
 
 	/*
@@ -193,7 +189,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 
 					@Override
 					public void run() {
-						getWindow().getDecorView().setBackgroundColor(Color.parseColor(cb.getColor()));
+						getWindow().getDecorView().setBackgroundColor(
+								Color.parseColor(cb.getColor()));
 					}
 				});
 				sendAck(getUniqueDeviceId(), header.getOriginator(), "Updated background color.");
@@ -218,25 +215,6 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 			Log.e(TAG, "IO exception processing custom command.", e);
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Messaging exception processing custom command.", e);
-		}
-	}
-
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class RegsitrationFragment extends Fragment {
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.app.Fragment#onCreateView(android.view.LayoutInflater,
-		 * android.view.ViewGroup, android.os.Bundle)
-		 */
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.registration, container, false);
-			return rootView;
 		}
 	}
 }
