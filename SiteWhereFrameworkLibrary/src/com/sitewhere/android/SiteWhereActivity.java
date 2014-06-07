@@ -54,7 +54,6 @@ public abstract class SiteWhereActivity extends Activity {
 	 */
 	protected void connectToSiteWhere() {
 		Intent intent = new Intent(getMessageServiceName());
-		configureServiceIntent(intent);
 		startService(intent);
 		bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 	}
@@ -131,14 +130,6 @@ public abstract class SiteWhereActivity extends Activity {
 	 */
 	protected String getMessageServiceName() {
 		return ISiteWhereMessaging.MQTT;
-	}
-
-	/**
-	 * Configure {@link Intent} used to start the service.
-	 * 
-	 * @param intent
-	 */
-	protected void configureServiceIntent(Intent intent) {
 	}
 
 	/** Handles connection to message service */

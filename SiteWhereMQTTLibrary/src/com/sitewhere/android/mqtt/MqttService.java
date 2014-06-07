@@ -29,13 +29,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 import android.util.Log;
 
 import com.sitewhere.android.messaging.IFromSiteWhere;
 import com.sitewhere.android.messaging.IToSiteWhere;
+import com.sitewhere.android.mqtt.ui.IConnectivityPreferences;
 
 /**
  * Service that provides MQTT connectivity to external apps.
@@ -49,9 +53,6 @@ public class MqttService extends Service {
 
 	/** Application package prefix */
 	public static final String APP_ID = "com.sitewhere.mqtt";
-
-	/** Name of extra passed with start Intent to specify MQTT configuration */
-	public static final String EXTRA_CONFIGURATION = APP_ID + ".Configuration";
 
 	/** MQTT client connection state */
 	public MqttConnectionState connectionState = MqttConnectionState.Disconnected;
@@ -276,27 +277,58 @@ public class MqttService extends Service {
 	}
 
 	/**
+	 * Gets the unique id for a device.
+	 * 
+	 * @return
+	 */
+	protected String getUniqueDeviceId() {
+		String id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+		if (id == null) {
+			throw new RuntimeException(
+					"Running in context that does not have a unique id. Override getUniqueDeviceId() in subclass.");
+		}
+		return id;
+	}
+
+	/**
+	 * Populate an {@link MqttConfiguration} from preference data.
+	 * 
+	 * @return
+	 */
+	protected MqttConfiguration loadConfigurationFromPreferences() {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+		String uri = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+		if (uri != null) {
+			String[] parts = uri.split("[:]+");
+			if (parts.length == 0) {
+				return null;
+			} else if (parts.length == 1) {
+				return new MqttConfiguration(parts[0], 1883, getUniqueDeviceId());
+			} else {
+				try {
+					int port = Integer.parseInt(parts[1]);
+					return new MqttConfiguration(parts[0], port, getUniqueDeviceId());
+				} catch (NumberFormatException e) {
+					Log.e(TAG, "Invalid port in MQTT URI.");
+					return null;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Common handler for start request from application.
 	 * 
 	 * @param intent
 	 * @param startId
 	 */
 	protected synchronized void handleStart(Intent intent, int startId) {
-
-		// This should not happen since we are using START_REDELIVER_INTENT.
-		if (intent == null) {
-			throw new RuntimeException(
-					"Service received a null intent. No configuration data available, so start failed.");
-		}
-
-		// Get hardware id and verify that, if connected, it's the one we are using.
-		MqttConfiguration inConfig = intent.getParcelableExtra(EXTRA_CONFIGURATION);
+		MqttConfiguration inConfig = loadConfigurationFromPreferences();
 		if (inConfig == null) {
-			Log.e(TAG, "No MQTT configuration passed on Intent extra.");
-			return;
-		}
-		if ((this.configuration != null) && (!this.configuration.equals(inConfig))) {
-			Log.e(TAG, "Service already connected using different settings.");
+			Log.e(TAG, "Missing or invalid MQTT configuration. Can not start service.");
 			return;
 		}
 
@@ -360,7 +392,7 @@ public class MqttService extends Service {
 		public void send(byte[] payload) throws RemoteException {
 			try {
 				mqttManager.send(payload);
-			} catch (SiteWhereMqttExcception e) {
+			} catch (SiteWhereMqttException e) {
 				Log.e(TAG, "Error sending message.", e);
 				throw new RemoteException();
 			}

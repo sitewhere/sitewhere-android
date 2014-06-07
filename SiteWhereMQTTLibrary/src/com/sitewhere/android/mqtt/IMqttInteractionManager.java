@@ -29,28 +29,28 @@ public interface IMqttInteractionManager {
 	 * 
 	 * @param hardwareId
 	 * @param connection
-	 * @throws SiteWhereMqttExcception
+	 * @throws SiteWhereMqttException
 	 */
 	public void connect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttExcception;
+			throws SiteWhereMqttException;
 
 	/**
 	 * Send a message payload to SiteWhere.
 	 * 
 	 * @param payload
-	 * @throws SiteWhereMqttExcception
+	 * @throws SiteWhereMqttException
 	 */
-	public void send(byte[] payload) throws SiteWhereMqttExcception;
+	public void send(byte[] payload) throws SiteWhereMqttException;
 
 	/**
 	 * Handle topic-related disconnect logic.
 	 * 
 	 * @param hardwareId
 	 * @param connection
-	 * @throws SiteWhereMqttExcception
+	 * @throws SiteWhereMqttException
 	 */
 	public void disconnect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttExcception;
+			throws SiteWhereMqttException;
 
 	/**
 	 * Set callback for MQTT message notifications.

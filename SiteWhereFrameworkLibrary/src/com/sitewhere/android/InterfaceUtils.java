@@ -1,4 +1,4 @@
-package com.sitewhere.android.mqtt.ui;
+package com.sitewhere.android;
 
 import android.app.AlertDialog;
 import android.content.Context;

@@ -18,18 +18,20 @@ package com.sitewhere.android.example;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import android.content.Intent;
+import android.app.FragmentTransaction;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.View;
 
 import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
 import com.sitewhere.android.generated.Android.AndroidSpecification.changeBackground;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
-import com.sitewhere.android.mqtt.MqttConfiguration;
-import com.sitewhere.android.mqtt.MqttService;
+import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
+import com.sitewhere.android.mqtt.ui.IConnectivityPreferences;
+import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
@@ -39,10 +41,14 @@ import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Registr
  * 
  * @author Derek
  */
-public class SiteWhereExample extends SiteWhereProtobufActivity {
+public class SiteWhereExample extends SiteWhereProtobufActivity implements
+		IConnectivityWizardListener {
 
 	/** Tag for logging */
 	private static final String TAG = "SiteWhereExample";
+
+	/** Wizard shown to establish preferences */
+	private ConnectivityWizardFragment wizard;
 
 	/*
 	 * (non-Javadoc)
@@ -52,7 +58,50 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.sitewhere_setup);
+		setContentView(R.layout.main);
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		String apiUrl = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
+		String mqttBroker = prefs.getString(
+				IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+
+		if ((apiUrl == null) || (mqttBroker == null)) {
+			initConnectivityWizard();
+		} else {
+			initExampleApplication();
+		}
+	}
+
+	/**
+	 * Adds the connectivity wizard if preferences have not been set.
+	 */
+	protected void initConnectivityWizard() {
+		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+		wizard = new ConnectivityWizardFragment();
+		wizard.setWizardListener(this);
+		fragmentTransaction.replace(R.id.container, wizard);
+		fragmentTransaction.commit();
+	}
+
+	/**
+	 * Adds the connectivity wizard if preferences have not been set.
+	 */
+	protected void initExampleApplication() {
+		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+		fragmentTransaction.replace(R.id.container, new ExampleFragment());
+		fragmentTransaction.commit();
+		connectToSiteWhere();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.mqtt.ui.IConnectivityWizardListener#onWizardComplete()
+	 */
+	@Override
+	public void onWizardComplete() {
+		initExampleApplication();
+		connectToSiteWhere();
 	}
 
 	/*
@@ -64,53 +113,6 @@ public class SiteWhereExample extends SiteWhereProtobufActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		disconnectFromSiteWhere();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onPostCreate(android.os.Bundle)
-	 */
-	@Override
-	protected void onPostCreate(Bundle savedInstanceState) {
-		super.onPostCreate(savedInstanceState);
-
-		// Button connect = (Button) findViewById(R.id.sw_reg_connect);
-		// connect.setOnClickListener(new View.OnClickListener() {
-		//
-		// @Override
-		// public void onClick(View v) {
-		// onConnectButtonClicked(v);
-		// }
-		// });
-		//
-		// Button disconnect = (Button) findViewById(R.id.sw_reg_disconnect);
-		// disconnect.setOnClickListener(new View.OnClickListener() {
-		//
-		// @Override
-		// public void onClick(View v) {
-		// }
-		// });
-	}
-
-	/**
-	 * Connects to SiteWhere as result of clicking 'Connect' button.
-	 * 
-	 * @param v
-	 */
-	protected void onConnectButtonClicked(View v) {
-		connectToSiteWhere();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.sitewhere.android.SiteWhereActivity#configureServiceIntent(android.content.Intent)
-	 */
-	@Override
-	protected void configureServiceIntent(Intent intent) {
-		MqttConfiguration config = new MqttConfiguration("192.168.1.68", 1883, getUniqueDeviceId());
-		intent.putExtra(MqttService.EXTRA_CONFIGURATION, config);
 	}
 
 	/*

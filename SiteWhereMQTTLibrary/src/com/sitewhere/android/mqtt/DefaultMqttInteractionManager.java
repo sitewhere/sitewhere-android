@@ -65,7 +65,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	 */
 	@Override
 	public void connect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttExcception {
+			throws SiteWhereMqttException {
 		this.connection = connection;
 		executor.submit(new MqttMessageProcessor());
 		commandTopic = new Topic(getCommandTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
@@ -74,7 +74,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 			connection.subscribe(new Topic[] { commandTopic, systemTopic });
 			Log.d(MqttService.TAG, "Subscribed to topics successfully.");
 		} catch (Exception e) {
-			throw new SiteWhereMqttExcception("Unable to subscribe to topics.", e);
+			throw new SiteWhereMqttException("Unable to subscribe to topics.", e);
 		}
 	}
 
@@ -84,15 +84,15 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	 * @see com.sitewhere.android.mqtt.IMqttInteractionManager#send(byte[])
 	 */
 	@Override
-	public void send(byte[] payload) throws SiteWhereMqttExcception {
+	public void send(byte[] payload) throws SiteWhereMqttException {
 		if (connection == null) {
-			throw new SiteWhereMqttExcception("Attempting to send a message while disconnected.");
+			throw new SiteWhereMqttException("Attempting to send a message while disconnected.");
 		}
 		try {
 			connection.publish(getOutboundTopic(), payload, QoS.EXACTLY_ONCE, false);
 			Log.d(MqttService.TAG, "Sent message successfully.");
 		} catch (Exception e) {
-			throw new SiteWhereMqttExcception("Unable to publish message.", e);
+			throw new SiteWhereMqttException("Unable to publish message.", e);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	 */
 	@Override
 	public void disconnect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttExcception {
+			throws SiteWhereMqttException {
 		try {
 			connection.unsubscribe(new String[] { getCommandTopicPrefix() + hardwareId,
 					getSystemTopicPrefix() + hardwareId });
@@ -112,7 +112,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 			this.executor.shutdownNow();
 			Log.d(MqttService.TAG, "Unsubscribed from topics successfully.");
 		} catch (Exception e) {
-			throw new SiteWhereMqttExcception("Unable to subscribe to topics.", e);
+			throw new SiteWhereMqttException("Unable to subscribe to topics.", e);
 		}
 	}
 

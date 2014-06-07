@@ -70,6 +70,13 @@
             android:visibility="visible" />
     </LinearLayout>
 
+    <View
+        android:id="@+id/sitewhere_mqtt_divider"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/sitewhere_mqtt_title"
         android:layout_width="wrap_content"
@@ -140,5 +147,13 @@
             android:layout_height="20dp"
             android:visibility="visible" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/sitewhere_wizard_complete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/sitewhere_wizard_complete"
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -8,8 +8,10 @@ import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 
 import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.sitewhere.android.InterfaceUtils;
 import com.sitewhere.android.NetworkUtils;
 import com.sitewhere.android.mqtt.R;
 import com.sitewhere.rest.model.system.Version;
@@ -33,10 +36,10 @@ import com.sitewhere.spi.SiteWhereException;
  * 
  * @author Derek
  */
-public class SiteWhereHostChooserFragment extends Fragment {
+public class ConnectivityWizardFragment extends Fragment {
 
 	/** Tag for logging */
-	private static final String TAG = "SiteWhereHostChooser";
+	private static final String TAG = "SiteWhereConnectivity";
 
 	/** Color for error messages */
 	private static final String ERROR_COLOR = "#550000";
@@ -61,6 +64,9 @@ public class SiteWhereHostChooserFragment extends Fragment {
 
 	/** Spinner progress for API verify */
 	private ProgressBar apiVerifyProgress;
+
+	/** Layout for MQTT hostname info */
+	private View mqttDivider;
 
 	/** Layout for MQTT hostname info */
 	private LinearLayout mqttHostGroup;
@@ -89,10 +95,20 @@ public class SiteWhereHostChooserFragment extends Fragment {
 	/** Spinner progress for MQTT verify */
 	private ProgressBar mqttVerifyProgress;
 
+	/** Button that passes control to main application */
+	private Button wizardComplete;
+
 	/** Used to handle thread execution */
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-	public SiteWhereHostChooserFragment() {
+	/** Listens for wizard to complete */
+	private IConnectivityWizardListener listener;
+
+	public ConnectivityWizardFragment() {
+	}
+
+	public void setWizardListener(IConnectivityWizardListener listener) {
+		this.listener = listener;
 	}
 
 	/*
@@ -103,7 +119,7 @@ public class SiteWhereHostChooserFragment extends Fragment {
 	 */
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View rootView = inflater.inflate(R.layout.sitewhere_host, container, false);
+		View rootView = inflater.inflate(R.layout.sitewhere_connectivity, container, false);
 		return rootView;
 	}
 
@@ -118,6 +134,16 @@ public class SiteWhereHostChooserFragment extends Fragment {
 
 		setupApiFields();
 		setupMqttFields();
+
+		// Get reference to 'verify' button.
+		wizardComplete = (Button) getActivity().findViewById(R.id.sitewhere_wizard_complete);
+		wizardComplete.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				onWizardCompleteClicked(v);
+			}
+		});
 	}
 
 	/**
@@ -156,6 +182,9 @@ public class SiteWhereHostChooserFragment extends Fragment {
 	 * Set up field for verifying API access.
 	 */
 	protected void setupMqttFields() {
+		// Get reference MQTT title.
+		mqttDivider = (View) getActivity().findViewById(R.id.sitewhere_mqtt_divider);
+
 		// Get reference MQTT title.
 		mqttTitle = (TextView) getActivity().findViewById(R.id.sitewhere_mqtt_title);
 
@@ -254,6 +283,16 @@ public class SiteWhereHostChooserFragment extends Fragment {
 				+ ") verified.");
 		Log.d(TAG, "SiteWhere server reported version " + version.getVersionIdentifier() + ".");
 
+		// Update preferences with new value.
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		SharedPreferences.Editor editor = prefs.edit();
+
+		String uri = apiUri.getText().toString();
+		String api = "http://" + uri + "/sitewhere/api/";
+		editor.putString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, api);
+
+		editor.commit();
+
 		showMqttHostFields();
 	}
 
@@ -261,6 +300,7 @@ public class SiteWhereHostChooserFragment extends Fragment {
 	 * Show fields for entering MQTT host.
 	 */
 	protected void showMqttHostFields() {
+		mqttDivider.setVisibility(View.VISIBLE);
 		mqttTitle.setVisibility(View.VISIBLE);
 		mqttLabel.setVisibility(View.VISIBLE);
 		mqttHostGroup.setVisibility(View.VISIBLE);
@@ -353,6 +393,32 @@ public class SiteWhereHostChooserFragment extends Fragment {
 		mqttVerifyCheck.setVisibility(View.VISIBLE);
 		mqttVerifyMessage.setTextColor(Color.parseColor(SUCCESS_COLOR));
 		mqttVerifyMessage.setText("MQTT broker connectivity verified.");
+
+		// Update preferences with new value.
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		SharedPreferences.Editor editor = prefs.edit();
+
+		String uri = mqttUri.getText().toString();
+		editor.putString(IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, uri);
+
+		editor.commit();
+
+		// Make "finish" button visible.
+		wizardComplete.setVisibility(View.VISIBLE);
+	}
+
+	/**
+	 * Called when button for ending wizard is pressed.
+	 * 
+	 * @param view
+	 */
+	protected void onWizardCompleteClicked(View view) {
+		if (listener != null) {
+			listener.onWizardComplete();
+		} else {
+			wizardComplete.setText("Nowhere to go!");
+			wizardComplete.setBackgroundColor(Color.parseColor("#cc0000"));
+		}
 	}
 
 	/**

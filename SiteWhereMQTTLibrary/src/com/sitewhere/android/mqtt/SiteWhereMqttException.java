@@ -20,23 +20,23 @@ package com.sitewhere.android.mqtt;
  * 
  * @author Derek
  */
-public class SiteWhereMqttExcception extends Exception {
+public class SiteWhereMqttException extends Exception {
 
 	/** Serial version UID */
 	private static final long serialVersionUID = -20081752901494470L;
 
-	public SiteWhereMqttExcception() {
+	public SiteWhereMqttException() {
 	}
 
-	public SiteWhereMqttExcception(String detailMessage) {
+	public SiteWhereMqttException(String detailMessage) {
 		super(detailMessage);
 	}
 
-	public SiteWhereMqttExcception(Throwable throwable) {
+	public SiteWhereMqttException(Throwable throwable) {
 		super(throwable);
 	}
 
-	public SiteWhereMqttExcception(String detailMessage, Throwable throwable) {
+	public SiteWhereMqttException(String detailMessage, Throwable throwable) {
 		super(detailMessage, throwable);
 	}
 }
