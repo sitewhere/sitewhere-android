@@ -15,10 +15,10 @@
         android:textStyle="bold" />
 
     <Button
-        android:id="@+id/prefs_clear"
+        android:id="@+id/main_send_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:text="@string/prefs_clear" />
+        android:text="@string/main_send_location" />
 
 </FrameLayout>

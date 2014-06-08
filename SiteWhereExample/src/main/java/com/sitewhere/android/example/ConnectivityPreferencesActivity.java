@@ -3,7 +3,7 @@ package com.sitewhere.android.example;
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.sitewhere.android.mqtt.ui.ConnectivityPreferencesFragment;
+import com.sitewhere.android.mqtt.preferences.ConnectivityPreferencesFragment;
 
 /**
  * Activity that displays connectivity preferences.

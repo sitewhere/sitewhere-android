@@ -39,7 +39,7 @@ import android.util.Log;
 
 import com.sitewhere.android.messaging.IFromSiteWhere;
 import com.sitewhere.android.messaging.IToSiteWhere;
-import com.sitewhere.android.mqtt.ui.IConnectivityPreferences;
+import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
 
 /**
  * Service that provides MQTT connectivity to external apps.
@@ -244,6 +244,20 @@ public class MqttService extends Service {
 		return (configuration != null);
 	}
 
+	/**
+	 * Gets the unique id for a device.
+	 * 
+	 * @return
+	 */
+	protected String getUniqueDeviceId() {
+		String id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+		if (id == null) {
+			throw new RuntimeException(
+					"Running in context that does not have a unique id. Override getUniqueDeviceId() in subclass.");
+		}
+		return id;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -277,20 +291,6 @@ public class MqttService extends Service {
 	}
 
 	/**
-	 * Gets the unique id for a device.
-	 * 
-	 * @return
-	 */
-	protected String getUniqueDeviceId() {
-		String id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-		if (id == null) {
-			throw new RuntimeException(
-					"Running in context that does not have a unique id. Override getUniqueDeviceId() in subclass.");
-		}
-		return id;
-	}
-
-	/**
 	 * Populate an {@link MqttConfiguration} from preference data.
 	 * 
 	 * @return
@@ -298,7 +298,8 @@ public class MqttService extends Service {
 	protected MqttConfiguration loadConfigurationFromPreferences() {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-		String uri = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+		String uri = prefs.getString(IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI,
+				null);
 		if (uri != null) {
 			String[] parts = uri.split("[:]+");
 			if (parts.length == 0) {
@@ -333,15 +334,24 @@ public class MqttService extends Service {
 		}
 
 		// Store hardware id for later use.
+		boolean needsReconnect = false;
 		if (this.configuration == null) {
 			this.configuration = inConfig;
 			Log.d(TAG,
 					"Starting MQTT service for: host->" + configuration.getHostname() + " port->"
 							+ configuration.getPort() + " hardwareId->"
 							+ configuration.getHardwareId());
+		} else {
+			if (!inConfig.equals(this.configuration)) {
+				Log.d(TAG,
+						"Settings changed. Will reconnect with settings: host->"
+								+ configuration.getHostname() + " port->" + configuration.getPort()
+								+ " hardwareId->" + configuration.getHardwareId());
+				needsReconnect = true;
+			}
 		}
 
-		if (!isMqttConnected()) {
+		if ((!isMqttConnected()) || (needsReconnect)) {
 			if (isOnline()) {
 				reconnect();
 			} else {

@@ -37,7 +37,7 @@ import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.Regi
  * 
  * @author Derek
  */
-public class SiteWhereProtobufActivity extends SiteWhereActivity {
+public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 
 	/** Tag for logging */
 	public static final String TAG = "SiteWhereProtobuf";
@@ -73,8 +73,7 @@ public class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param header
 	 * @param ack
 	 */
-	public void handleRegistrationAck(Header header, RegistrationAck ack) {
-	}
+	public abstract void handleRegistrationAck(Header header, RegistrationAck ack);
 
 	/**
 	 * Send an acknowledgement event to SiteWhere.

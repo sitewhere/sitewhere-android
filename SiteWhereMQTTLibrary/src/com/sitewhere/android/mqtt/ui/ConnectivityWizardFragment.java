@@ -1,5 +1,6 @@
 package com.sitewhere.android.mqtt.ui;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,6 +27,8 @@ import android.widget.TextView;
 import com.sitewhere.android.InterfaceUtils;
 import com.sitewhere.android.NetworkUtils;
 import com.sitewhere.android.mqtt.R;
+import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
+import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.rest.model.system.Version;
 import com.sitewhere.rest.service.SiteWhereClient;
 import com.sitewhere.spi.ISiteWhereClient;
@@ -153,6 +156,17 @@ public class ConnectivityWizardFragment extends Fragment {
 		// Get reference to API hostname text field.
 		apiUri = (EditText) getActivity().findViewById(R.id.sitewhere_api);
 
+		// Load URI from preferences if available.
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		String prefApiUri = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
+		if (prefApiUri != null) {
+			try {
+				URI uri = new URI(prefApiUri);
+				apiUri.setText(uri.getHost() + ":" + uri.getPort());
+			} catch (URISyntaxException e) {
+			}
+		}
+
 		// Get reference to 'verify' button.
 		apiVerifyButton = (Button) getActivity().findViewById(R.id.sitewhere_api_submit);
 		apiVerifyButton.setOnClickListener(new View.OnClickListener() {
@@ -196,6 +210,14 @@ public class ConnectivityWizardFragment extends Fragment {
 
 		// Get reference to MQTT host text field.
 		mqttUri = (EditText) getActivity().findViewById(R.id.sitewhere_mqtt);
+
+		// Load URI from preferences if available.
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		String prefMqttUri = prefs.getString(
+				IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+		if (prefMqttUri != null) {
+			mqttUri.setText(prefMqttUri);
+		}
 
 		// Get reference to 'verify' button.
 		mqttVerifyButton = (Button) getActivity().findViewById(R.id.sitewhere_mqtt_submit);
@@ -289,7 +311,7 @@ public class ConnectivityWizardFragment extends Fragment {
 
 		String uri = apiUri.getText().toString();
 		String api = "http://" + uri + "/sitewhere/api/";
-		editor.putString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, api);
+		editor.putString(IMqttConnectivityPreferences.PREF_SITEWHERE_API_URI, api);
 
 		editor.commit();
 
@@ -399,7 +421,7 @@ public class ConnectivityWizardFragment extends Fragment {
 		SharedPreferences.Editor editor = prefs.edit();
 
 		String uri = mqttUri.getText().toString();
-		editor.putString(IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, uri);
+		editor.putString(IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, uri);
 
 		editor.commit();
 

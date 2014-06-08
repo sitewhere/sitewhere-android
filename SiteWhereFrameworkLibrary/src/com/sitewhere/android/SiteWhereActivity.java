@@ -50,19 +50,9 @@ public abstract class SiteWhereActivity extends Activity {
 	protected boolean bound = false;
 
 	/**
-	 * Attempts to start a connection to SiteWhere on the underlying message service.
-	 */
-	protected void connectToSiteWhere() {
-		Intent intent = new Intent(getMessageServiceName());
-		startService(intent);
-		bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-	}
-
-	/**
 	 * Called after connection to underlying messaging service is complete.
 	 */
-	protected void onConnectedToSiteWhere() {
-	}
+	protected abstract void onConnectedToSiteWhere();
 
 	/**
 	 * Called when a custom command payload is received.
@@ -73,6 +63,22 @@ public abstract class SiteWhereActivity extends Activity {
 	 * Called when a custom command payload is received.
 	 */
 	protected abstract void onReceivedSystemCommand(byte[] payload);
+
+	/**
+	 * Called when connection to SiteWhere is disconnected.
+	 */
+	protected abstract void onDisconnectedFromSiteWhere();
+
+	/**
+	 * Attempts to start a connection to SiteWhere on the underlying message service.
+	 */
+	protected void connectToSiteWhere() {
+		if (!bound) {
+			Intent intent = new Intent(getMessageServiceName());
+			startService(intent);
+			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+		}
+	}
 
 	/**
 	 * Send command to SiteWhere.
@@ -104,17 +110,11 @@ public abstract class SiteWhereActivity extends Activity {
 	}
 
 	/**
-	 * Called when connection to SiteWhere is disconnected.
-	 */
-	protected void onDisconnectedFromSiteWhere() {
-	}
-
-	/**
 	 * Gets the unique id for a device.
 	 * 
 	 * @return
 	 */
-	protected String getUniqueDeviceId() {
+	public String getUniqueDeviceId() {
 		String id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 		if (id == null) {
 			throw new RuntimeException(

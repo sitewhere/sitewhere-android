@@ -24,14 +24,18 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
 import com.sitewhere.android.generated.Android.AndroidSpecification.changeBackground;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
+import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
 import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
-import com.sitewhere.android.mqtt.ui.IConnectivityPreferences;
 import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
+import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
@@ -63,7 +67,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String apiUrl = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
 		String mqttBroker = prefs.getString(
-				IConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+				IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
 
 		if ((apiUrl == null) || (mqttBroker == null)) {
 			initConnectivityWizard();
@@ -81,6 +85,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		wizard.setWizardListener(this);
 		fragmentTransaction.replace(R.id.container, wizard);
 		fragmentTransaction.commit();
+		getActionBar().setTitle("SiteWhere Device Setup");
 	}
 
 	/**
@@ -91,6 +96,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		fragmentTransaction.replace(R.id.container, new ExampleFragment());
 		fragmentTransaction.commit();
 		connectToSiteWhere();
+		getActionBar().setTitle("SiteWhere Fancy Example");
 	}
 
 	/*
@@ -102,6 +108,35 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 	public void onWizardComplete() {
 		initExampleApplication();
 		connectToSiteWhere();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.example_app_actions, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle presses on the action bar items
+		switch (item.getItemId()) {
+		case R.id.action_setup_wizard:
+			initConnectivityWizard();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 
 	/*

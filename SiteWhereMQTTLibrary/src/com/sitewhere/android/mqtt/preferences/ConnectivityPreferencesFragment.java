@@ -1,4 +1,4 @@
-package com.sitewhere.android.mqtt.ui;
+package com.sitewhere.android.mqtt.preferences;
 
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
