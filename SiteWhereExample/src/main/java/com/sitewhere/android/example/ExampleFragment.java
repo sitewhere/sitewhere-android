@@ -4,19 +4,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import android.app.Fragment;
+import android.app.Dialog;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
 import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
 
@@ -25,7 +26,7 @@ import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
  * 
  * @author Derek
  */
-public class ExampleFragment extends Fragment implements LocationListener {
+public class ExampleFragment extends MapFragment implements LocationListener {
 
 	/** Tag used for logging */
 	private static final String TAG = "ExampleFragment";
@@ -45,37 +46,29 @@ public class ExampleFragment extends Fragment implements LocationListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see android.app.Fragment#onCreateView(android.view.LayoutInflater, android.view.ViewGroup,
-	 * android.os.Bundle)
-	 */
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View rootView = inflater.inflate(R.layout.example_app, container, false);
-		return rootView;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see android.app.Activity#onPostCreate(android.os.Bundle)
 	 */
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		locationManager = (LocationManager) getActivity()
-				.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-		scheduler.scheduleAtFixedRate(new LocationReporter(), SEND_INTERVAL_IN_SECONDS,
-				SEND_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
+		// Getting Google Play availability status
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity()
+				.getBaseContext());
 
-		Button sendLocation = (Button) getActivity().findViewById(R.id.main_send_location);
-		sendLocation.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				onSendCurrentLocation();
-			}
-		});
+		// If Google Play not available, show dialog for dealing with it.
+		if (status != ConnectionResult.SUCCESS) {
+			int requestCode = 10;
+			Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, getActivity(),
+					requestCode);
+			dialog.show();
+		} else {
+			getMap().setMyLocationEnabled(true);
+			locationManager = (LocationManager) getActivity().getSystemService(
+					Context.LOCATION_SERVICE);
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+			scheduler.scheduleAtFixedRate(new LocationReporter(), SEND_INTERVAL_IN_SECONDS,
+					SEND_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
+		}
 	}
 
 	/**
@@ -109,6 +102,16 @@ public class ExampleFragment extends Fragment implements LocationListener {
 	@Override
 	public void onLocationChanged(Location location) {
 		this.lastLocation = location;
+
+		double latitude = location.getLatitude();
+		double longitude = location.getLongitude();
+		LatLng latLng = new LatLng(latitude, longitude);
+
+		// Showing the current location in Google Map
+		getMap().moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+		// Zoom in the Google Map
+		getMap().animateCamera(CameraUpdateFactory.zoomTo(15));
 	}
 
 	/*
