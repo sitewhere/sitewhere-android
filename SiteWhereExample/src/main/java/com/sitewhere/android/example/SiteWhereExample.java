@@ -32,7 +32,8 @@ import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
 import com.sitewhere.android.generated.Android.AndroidSpecification.changeBackground;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
-import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
+import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
+import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
 import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
@@ -66,10 +67,9 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String apiUrl = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
-		String mqttBroker = prefs.getString(
-				IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
+		IMqttServicePreferences mqtt = MqttServicePreferences.read(this);
 
-		if ((apiUrl == null) || (mqttBroker == null)) {
+		if ((apiUrl == null) || (mqtt.getBrokerHostname() == null)) {
 			initConnectivityWizard();
 		} else {
 			initExampleApplication();

@@ -27,7 +27,8 @@ import android.widget.TextView;
 import com.sitewhere.android.InterfaceUtils;
 import com.sitewhere.android.NetworkUtils;
 import com.sitewhere.android.mqtt.R;
-import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
+import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
+import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.rest.model.system.Version;
 import com.sitewhere.rest.service.SiteWhereClient;
@@ -212,12 +213,9 @@ public class ConnectivityWizardFragment extends Fragment {
 		mqttUri = (EditText) getActivity().findViewById(R.id.sitewhere_mqtt);
 
 		// Load URI from preferences if available.
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		String prefMqttUri = prefs.getString(
-				IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
-		if (prefMqttUri != null) {
-			mqttUri.setText(prefMqttUri);
-		}
+		IMqttServicePreferences prefs = MqttServicePreferences.read(getActivity());
+		String prefMqttUri = prefs.getBrokerHostname() + ":" + prefs.getBrokerPort();
+		mqttUri.setText(prefMqttUri);
 
 		// Get reference to 'verify' button.
 		mqttVerifyButton = (Button) getActivity().findViewById(R.id.sitewhere_mqtt_submit);
@@ -311,7 +309,7 @@ public class ConnectivityWizardFragment extends Fragment {
 
 		String uri = apiUri.getText().toString();
 		String api = "http://" + uri + "/sitewhere/api/";
-		editor.putString(IMqttConnectivityPreferences.PREF_SITEWHERE_API_URI, api);
+		editor.putString(IMqttServicePreferences.PREF_SITEWHERE_API_URI, api);
 
 		editor.commit();
 
@@ -416,14 +414,21 @@ public class ConnectivityWizardFragment extends Fragment {
 		mqttVerifyMessage.setTextColor(Color.parseColor(SUCCESS_COLOR));
 		mqttVerifyMessage.setText("MQTT broker connectivity verified.");
 
-		// Update preferences with new value.
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		SharedPreferences.Editor editor = prefs.edit();
-
+		// Update preferences with new values.
 		String uri = mqttUri.getText().toString();
-		editor.putString(IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, uri);
-
-		editor.commit();
+		String[] parts = uri.split("[:]+");
+		if (parts.length > 0) {
+			MqttServicePreferences updated = new MqttServicePreferences();
+			updated.setBrokerHostname(parts[0]);
+			if (parts.length > 1) {
+				try {
+					updated.setBrokerPort(Integer.parseInt(parts[1]));
+				} catch (NumberFormatException e) {
+					// Ignore invalid integers.
+				}
+			}
+			MqttServicePreferences.update(updated, getActivity());
+		}
 
 		// Make "finish" button visible.
 		wizardComplete.setVisibility(View.VISIBLE);

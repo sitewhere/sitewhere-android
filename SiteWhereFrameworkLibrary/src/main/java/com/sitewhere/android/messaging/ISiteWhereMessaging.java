@@ -23,5 +23,5 @@ package com.sitewhere.android.messaging;
 public interface ISiteWhereMessaging {
 
 	/** Intent filter service name for SiteWhere MQTT library */
-	public static final String MQTT = "com.sitewhere.android.mqtt.MQttService";
+	public static final String MQTT = "com.sitewhere.android.mqtt.MqttService";
 }
