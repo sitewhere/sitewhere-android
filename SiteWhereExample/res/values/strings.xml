@@ -2,9 +2,16 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <string name="app_name">SiteWhere</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="connect">Connect</string>
-    <string name="disconnect">Disconnect</string>
-
+    
+    <string name="overlay_title">Sensor Readings</string>
+    <string name="overlay_image_cdesc">SiteWhere Logo</string>
+    
+    <string name="overlay_lat_label">Lat:</string>
+    <string name="overlay_lon_label">Lon:</string>
+    <string name="overlay_alt_label">Alt:</string>
+    
+    <string name="overlay_rotx_label">RotX:</string>
+    <string name="overlay_roty_label">RotY:</string>
+    <string name="overlay_rotz_label">RotZ:</string>
+    
 </resources>

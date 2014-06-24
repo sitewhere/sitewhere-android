@@ -96,7 +96,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		fragmentTransaction.replace(R.id.container, new ExampleFragment());
 		fragmentTransaction.commit();
 		connectToSiteWhere();
-		getActionBar().setTitle("SiteWhere Fancy Example");
+		getActionBar().setTitle("SiteWhere Example");
 	}
 
 	/*
