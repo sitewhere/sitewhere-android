@@ -309,7 +309,7 @@ public class ConnectivityWizardFragment extends Fragment {
 
 		String uri = apiUri.getText().toString();
 		String api = "http://" + uri + "/sitewhere/api/";
-		editor.putString(IMqttServicePreferences.PREF_SITEWHERE_API_URI, api);
+		editor.putString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, api);
 
 		editor.commit();
 

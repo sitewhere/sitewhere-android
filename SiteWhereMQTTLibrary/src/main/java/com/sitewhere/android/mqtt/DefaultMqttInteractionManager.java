@@ -55,7 +55,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	private BlockingConnection connection;
 
 	/** Used to handle message processing */
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private ExecutorService executor;
 
 	/*
 	 * (non-Javadoc)
@@ -67,6 +67,10 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	public void connect(String hardwareId, BlockingConnection connection)
 			throws SiteWhereMqttException {
 		this.connection = connection;
+		if ((executor != null) && (!executor.isShutdown())) {
+			executor.shutdownNow();
+		}
+		executor = Executors.newSingleThreadExecutor();
 		executor.submit(new MqttMessageProcessor());
 		commandTopic = new Topic(getCommandTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
 		systemTopic = new Topic(getSystemTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);

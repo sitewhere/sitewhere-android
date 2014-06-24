@@ -18,6 +18,9 @@ package com.sitewhere.android.mqtt.preferences;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.preference.PreferenceManager;
 
 import com.sitewhere.android.mqtt.MqttService;
 
@@ -27,9 +30,6 @@ import com.sitewhere.android.mqtt.MqttService;
  * @author Derek
  */
 public class MqttServicePreferences implements IMqttServicePreferences {
-
-	/** Indentifier for loading preferences for SiteWhere MQTT */
-	public static final String IDENTIFIER = "com.sitewhere.android.mqtt";
 
 	/** Default MQTT broker port */
 	public static final int DEFAULT_BROKER_PORT = 1883;
@@ -43,6 +43,15 @@ public class MqttServicePreferences implements IMqttServicePreferences {
 	/** Device hardware id */
 	private String deviceHardwareId;
 
+	public MqttServicePreferences() {
+	}
+
+	public MqttServicePreferences(Parcel parcel) {
+		this.brokerHostname = parcel.readString();
+		this.brokerPort = parcel.readInt();
+		this.deviceHardwareId = parcel.readString();
+	}
+
 	/**
 	 * Read current values of preferences.
 	 * 
@@ -50,7 +59,7 @@ public class MqttServicePreferences implements IMqttServicePreferences {
 	 * @return
 	 */
 	public static IMqttServicePreferences read(Context context) {
-		SharedPreferences prefs = getSharedPreferences(context);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		return MqttServicePreferences.loadFrom(prefs);
 	}
 
@@ -62,18 +71,8 @@ public class MqttServicePreferences implements IMqttServicePreferences {
 	 * @return
 	 */
 	public static IMqttServicePreferences update(MqttServicePreferences updated, Context context) {
-		SharedPreferences prefs = getSharedPreferences(context);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		return MqttServicePreferences.saveTo(updated, prefs);
-	}
-
-	/**
-	 * Gets {@link SharedPreferences} relevant to {@link MqttService}.
-	 * 
-	 * @param context
-	 * @return
-	 */
-	public static SharedPreferences getSharedPreferences(Context context) {
-		return context.getSharedPreferences(IDENTIFIER, Context.MODE_MULTI_PROCESS);
 	}
 
 	/**
@@ -182,4 +181,36 @@ public class MqttServicePreferences implements IMqttServicePreferences {
 			return super.equals(o);
 		}
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.os.Parcelable#describeContents()
+	 */
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
+	 */
+	@Override
+	public void writeToParcel(Parcel parcel, int flags) {
+		parcel.writeString(getBrokerHostname());
+		parcel.writeInt(getBrokerPort());
+		parcel.writeString(getDeviceHardwareId());
+	}
+
+	public static final Parcelable.Creator<MqttServicePreferences> CREATOR = new Parcelable.Creator<MqttServicePreferences>() {
+		public MqttServicePreferences createFromParcel(Parcel in) {
+			return new MqttServicePreferences(in);
+		}
+
+		public MqttServicePreferences[] newArray(int size) {
+			return new MqttServicePreferences[size];
+		}
+	};
 }

@@ -22,6 +22,9 @@ package com.sitewhere.android.messaging;
  */
 public interface ISiteWhereMessaging {
 
+	/** Identifier for extra that holds configuration data */
+	public static final String EXTRA_CONFIGURATION = "configuration";
+
 	/** Intent filter service name for SiteWhere MQTT library */
-	public static final String MQTT = "com.sitewhere.android.mqtt.MqttService";
+	public static final String SERVICE_MQTT = "com.sitewhere.android.mqtt.MqttService";
 }

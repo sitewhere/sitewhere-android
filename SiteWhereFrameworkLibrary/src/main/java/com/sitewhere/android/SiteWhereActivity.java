@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.provider.Settings.Secure;
 import android.util.Log;
@@ -50,6 +51,13 @@ public abstract class SiteWhereActivity extends Activity {
 	protected boolean bound = false;
 
 	/**
+	 * Gets the configuration data passed to the {@link Intent} for the service.
+	 * 
+	 * @return
+	 */
+	protected abstract Parcelable getServiceConfiguration();
+
+	/**
 	 * Called after connection to underlying messaging service is complete.
 	 */
 	protected abstract void onConnectedToSiteWhere();
@@ -75,6 +83,7 @@ public abstract class SiteWhereActivity extends Activity {
 	protected void connectToSiteWhere() {
 		if (!bound) {
 			Intent intent = new Intent(getMessageServiceName());
+			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
 			startService(intent);
 			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 		}
@@ -129,7 +138,7 @@ public abstract class SiteWhereActivity extends Activity {
 	 * @return
 	 */
 	protected String getMessageServiceName() {
-		return ISiteWhereMessaging.MQTT;
+		return ISiteWhereMessaging.SERVICE_MQTT;
 	}
 
 	/** Handles connection to message service */

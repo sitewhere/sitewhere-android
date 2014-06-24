@@ -36,9 +36,9 @@ import android.provider.Settings.Secure;
 import android.util.Log;
 
 import com.sitewhere.android.messaging.IFromSiteWhere;
+import com.sitewhere.android.messaging.ISiteWhereMessaging;
 import com.sitewhere.android.messaging.IToSiteWhere;
 import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
-import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 
 /**
  * Service that provides MQTT connectivity to external apps.
@@ -296,7 +296,8 @@ public class MqttService extends Service {
 	 * @param startId
 	 */
 	protected synchronized void handleStart(Intent intent, int startId) {
-		IMqttServicePreferences inConfig = MqttServicePreferences.read(this);
+		IMqttServicePreferences inConfig = intent
+				.getParcelableExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION);
 
 		// Store hardware id for later use.
 		boolean needsReconnect = true;

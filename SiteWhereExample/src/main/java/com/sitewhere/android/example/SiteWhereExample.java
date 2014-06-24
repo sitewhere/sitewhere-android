@@ -22,6 +22,7 @@ import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -74,6 +75,16 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		} else {
 			initExampleApplication();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.SiteWhereActivity#getServiceConfiguration()
+	 */
+	@Override
+	protected Parcelable getServiceConfiguration() {
+		return MqttServicePreferences.read(this);
 	}
 
 	/**

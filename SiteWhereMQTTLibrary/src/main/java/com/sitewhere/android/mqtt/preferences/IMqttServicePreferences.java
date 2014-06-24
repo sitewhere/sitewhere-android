@@ -15,14 +15,14 @@
  */
 package com.sitewhere.android.mqtt.preferences;
 
-import com.sitewhere.android.preferences.IConnectivityPreferences;
+import android.os.Parcelable;
 
 /**
  * Provides constants for connectivity preferences.
  * 
  * @author Derek
  */
-public interface IMqttServicePreferences extends IConnectivityPreferences {
+public interface IMqttServicePreferences extends Parcelable {
 
 	/** Preference for MQTT broker hostname */
 	public static final String PREF_SITEWHERE_MQTT_BROKER_HOSTNAME = "mqtt_hostname";
