@@ -66,9 +66,14 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		// Verify that SiteWhere API location has been specified.
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String apiUrl = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
-		IMqttServicePreferences mqtt = MqttServicePreferences.read(this);
+
+		// Push current device id into MQTT settings, then get current values.
+		MqttServicePreferences updated = new MqttServicePreferences();
+		updated.setDeviceHardwareId(getUniqueDeviceId());
+		IMqttServicePreferences mqtt = MqttServicePreferences.update(updated, this);
 
 		if ((apiUrl == null) || (mqtt.getBrokerHostname() == null)) {
 			initConnectivityWizard();

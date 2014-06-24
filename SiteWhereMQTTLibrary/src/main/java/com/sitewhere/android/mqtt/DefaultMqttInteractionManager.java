@@ -75,6 +75,8 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 		commandTopic = new Topic(getCommandTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
 		systemTopic = new Topic(getSystemTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
 		try {
+			Log.d(MqttService.TAG, "System command topic: " + systemTopic.name());
+			Log.d(MqttService.TAG, "Custom command topic: " + commandTopic.name());
 			connection.subscribe(new Topic[] { commandTopic, systemTopic });
 			Log.d(MqttService.TAG, "Subscribed to topics successfully.");
 		} catch (Exception e) {
@@ -94,7 +96,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 		}
 		try {
 			connection.publish(getOutboundTopic(), payload, QoS.EXACTLY_ONCE, false);
-			Log.d(MqttService.TAG, "Sent message successfully.");
+			Log.d(MqttService.TAG, "Sent message successfully to: " + getOutboundTopic());
 		} catch (Exception e) {
 			throw new SiteWhereMqttException("Unable to publish message.", e);
 		}

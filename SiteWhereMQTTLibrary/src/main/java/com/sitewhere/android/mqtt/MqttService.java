@@ -140,7 +140,7 @@ public class MqttService extends Service {
 		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		networkMonitor = new NetworkMonitor();
 		this.registerReceiver(networkMonitor, filter);
-		Log.d(TAG, "Monitoring network state.");
+		Log.d(TAG, "Now monitoring network state.");
 	}
 
 	/*
@@ -298,6 +298,9 @@ public class MqttService extends Service {
 	protected synchronized void handleStart(Intent intent, int startId) {
 		IMqttServicePreferences inConfig = intent
 				.getParcelableExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION);
+		if (inConfig == null) {
+			return;
+		}
 
 		// Store hardware id for later use.
 		boolean needsReconnect = true;
@@ -308,6 +311,7 @@ public class MqttService extends Service {
 							+ " port->" + configuration.getBrokerPort() + " hardwareId->"
 							+ configuration.getDeviceHardwareId());
 		} else if (!inConfig.equals(this.configuration)) {
+			this.configuration = inConfig;
 			Log.d(TAG,
 					"Settings changed. Will reconnect with settings: host->"
 							+ configuration.getBrokerHostname() + " port->"
