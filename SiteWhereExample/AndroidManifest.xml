@@ -37,9 +37,6 @@
         <service
             android:name="com.sitewhere.android.mqtt.MqttService"
             android:exported="false" >
-            <intent-filter>
-                <action android:name="com.sitewhere.messaging.MESSAGING_SERVICE" />
-            </intent-filter>
         </service>
 
         <meta-data

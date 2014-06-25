@@ -16,6 +16,7 @@
 package com.sitewhere.android;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -51,6 +52,13 @@ public abstract class SiteWhereActivity extends Activity {
 	protected boolean bound = false;
 
 	/**
+	 * Get class used to create a local service instance.
+	 * 
+	 * @return
+	 */
+	protected abstract Class<? extends Service> getServiceClass();
+
+	/**
 	 * Gets the configuration data passed to the {@link Intent} for the service.
 	 * 
 	 * @return
@@ -78,9 +86,29 @@ public abstract class SiteWhereActivity extends Activity {
 	protected abstract void onDisconnectedFromSiteWhere();
 
 	/**
-	 * Attempts to start a connection to SiteWhere on the underlying message service.
+	 * Create a connection to SiteWhere.
 	 */
 	protected void connectToSiteWhere() {
+		connectToSiteWhereLocal();
+	}
+
+	/**
+	 * Creates a connection to SiteWhere
+	 */
+	protected void connectToSiteWhereLocal() {
+		if (!bound) {
+			Intent intent = new Intent(this, getServiceClass());
+			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
+			startService(intent);
+			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+		}
+	}
+
+	/**
+	 * Attempts to connect to a remote {@link Service} using an {@link Intent} that will match based
+	 * on a filter.
+	 */
+	protected void connectToSiteWhereRemote() {
 		if (!bound) {
 			Intent intent = new Intent(ISiteWhereMessaging.MESSAGING_SERVICE);
 			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
@@ -155,7 +183,8 @@ public abstract class SiteWhereActivity extends Activity {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
+		 * @see
+		 * android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
 		 */
 		public void onServiceDisconnected(ComponentName className) {
 			bound = false;

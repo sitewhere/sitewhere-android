@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import android.app.FragmentTransaction;
+import android.app.Service;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
 import com.sitewhere.android.generated.Android.AndroidSpecification.changeBackground;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
+import com.sitewhere.android.mqtt.MqttService;
 import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
 import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
@@ -80,6 +82,16 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		} else {
 			initExampleApplication();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.SiteWhereActivity#getServiceClass()
+	 */
+	@Override
+	protected Class<? extends Service> getServiceClass() {
+		return MqttService.class;
 	}
 
 	/*
