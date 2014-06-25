@@ -45,7 +45,7 @@ public abstract class SiteWhereActivity extends Activity {
 	protected IToSiteWhere sitewhere;
 
 	/** Handles responses from SiteWhere */
-	protected SiteWhereResponseProcessor responseProcessor;
+	protected SiteWhereResponseProcessor responseProcessor = new SiteWhereResponseProcessor();
 
 	/** Indicates if bound to service */
 	protected boolean bound = false;
@@ -82,7 +82,7 @@ public abstract class SiteWhereActivity extends Activity {
 	 */
 	protected void connectToSiteWhere() {
 		if (!bound) {
-			Intent intent = new Intent(getMessageServiceName());
+			Intent intent = new Intent(ISiteWhereMessaging.MESSAGING_SERVICE);
 			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
 			startService(intent);
 			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -132,15 +132,6 @@ public abstract class SiteWhereActivity extends Activity {
 		return id;
 	}
 
-	/**
-	 * Service used to transmit data to/from SiteWhere. Override to use another service.
-	 * 
-	 * @return
-	 */
-	protected String getMessageServiceName() {
-		return ISiteWhereMessaging.SERVICE_MQTT;
-	}
-
 	/** Handles connection to message service */
 	protected ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -153,7 +144,6 @@ public abstract class SiteWhereActivity extends Activity {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			sitewhere = IToSiteWhere.Stub.asInterface(service);
 			try {
-				responseProcessor = new SiteWhereResponseProcessor();
 				sitewhere.register(responseProcessor);
 				bound = true;
 				Log.d(TAG, "Registered with SiteWhere messaging service.");

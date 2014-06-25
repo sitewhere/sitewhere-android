@@ -15,13 +15,6 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <service
-            android:name="com.sitewhere.android.mqtt.MqttService"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="com.sitewhere.android.mqtt.MqttService" />
-            </intent-filter>
-        </service>
     </application>
 
 </manifest>

@@ -34,6 +34,14 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="com.sitewhere.android.mqtt.MqttService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.sitewhere.messaging.MESSAGING_SERVICE" />
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
