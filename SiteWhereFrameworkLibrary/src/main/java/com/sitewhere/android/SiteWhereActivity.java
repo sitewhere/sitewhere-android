@@ -45,7 +45,7 @@ public abstract class SiteWhereActivity extends Activity {
 	protected IToSiteWhere sitewhere;
 
 	/** Handles responses from SiteWhere */
-	protected SiteWhereResponseProcessor responseProcessor;
+	protected SiteWhereResponseProcessor responseProcessor = new SiteWhereResponseProcessor();
 
 	/** Indicates if bound to service */
 	protected boolean bound = false;
@@ -153,7 +153,6 @@ public abstract class SiteWhereActivity extends Activity {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			sitewhere = IToSiteWhere.Stub.asInterface(service);
 			try {
-				responseProcessor = new SiteWhereResponseProcessor();
 				sitewhere.register(responseProcessor);
 				bound = true;
 				Log.d(TAG, "Registered with SiteWhere messaging service.");
@@ -165,11 +164,15 @@ public abstract class SiteWhereActivity extends Activity {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see
-		 * android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
+		 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
 		 */
 		public void onServiceDisconnected(ComponentName className) {
 			bound = false;
+			try {
+				sitewhere.unregister(responseProcessor);
+			} catch (RemoteException e) {
+				Log.e(TAG, "Unable to disconnect from messaging.");
+			}
 			sitewhere = null;
 			responseProcessor = null;
 			onDisconnectedFromSiteWhere();
