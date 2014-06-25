@@ -39,8 +39,10 @@ public class RegistrationManager implements IMqttCallback {
 	 * @param client
 	 */
 	public void addClient(IFromSiteWhere client) {
-		Log.d(MqttService.TAG, "Registration manager adding client.");
-		clients.add(client);
+		if (!clients.contains(client)) {
+			Log.d(MqttService.TAG, "Registration manager adding client.");
+			clients.add(client);
+		}
 	}
 
 	/**
@@ -77,8 +79,7 @@ public class RegistrationManager implements IMqttCallback {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.sitewhere.android.mqtt.IMqttCallback#onSystemCommandReceived(java.lang.String,
-	 * byte[])
+	 * @see com.sitewhere.android.mqtt.IMqttCallback#onSystemCommandReceived(java.lang.String, byte[])
 	 */
 	@Override
 	public void onSystemCommandReceived(String topic, byte[] payload) {
@@ -100,8 +101,7 @@ public class RegistrationManager implements IMqttCallback {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.sitewhere.android.mqtt.IMqttCallback#onCustomCommandReceived(java.lang.String,
-	 * byte[])
+	 * @see com.sitewhere.android.mqtt.IMqttCallback#onCustomCommandReceived(java.lang.String, byte[])
 	 */
 	@Override
 	public void onCustomCommandReceived(String topic, byte[] payload) {
@@ -130,7 +130,7 @@ public class RegistrationManager implements IMqttCallback {
 		List<IFromSiteWhere> unreachable = new ArrayList<IFromSiteWhere>();
 		for (IFromSiteWhere client : clients) {
 			try {
-				client.connected();
+				client.disconnected();
 			} catch (RemoteException e) {
 				Log.w(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
 				unreachable.add(client);

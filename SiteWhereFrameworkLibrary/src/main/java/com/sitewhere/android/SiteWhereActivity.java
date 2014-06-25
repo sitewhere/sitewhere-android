@@ -155,11 +155,15 @@ public abstract class SiteWhereActivity extends Activity {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see
-		 * android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
+		 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
 		 */
 		public void onServiceDisconnected(ComponentName className) {
 			bound = false;
+			try {
+				sitewhere.unregister(responseProcessor);
+			} catch (RemoteException e) {
+				Log.e(TAG, "Unable to disconnect from messaging.");
+			}
 			sitewhere = null;
 			responseProcessor = null;
 			onDisconnectedFromSiteWhere();
