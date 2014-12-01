@@ -55,7 +55,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	private BlockingConnection connection;
 
 	/** Used to handle message processing */
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private ExecutorService executor;
 
 	/*
 	 * (non-Javadoc)
@@ -67,10 +67,16 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	public void connect(String hardwareId, BlockingConnection connection)
 			throws SiteWhereMqttException {
 		this.connection = connection;
+		if ((executor != null) && (!executor.isShutdown())) {
+			executor.shutdownNow();
+		}
+		executor = Executors.newSingleThreadExecutor();
 		executor.submit(new MqttMessageProcessor());
 		commandTopic = new Topic(getCommandTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
 		systemTopic = new Topic(getSystemTopicPrefix() + hardwareId, QoS.EXACTLY_ONCE);
 		try {
+			Log.d(MqttService.TAG, "System command topic: " + systemTopic.name());
+			Log.d(MqttService.TAG, "Custom command topic: " + commandTopic.name());
 			connection.subscribe(new Topic[] { commandTopic, systemTopic });
 			Log.d(MqttService.TAG, "Subscribed to topics successfully.");
 		} catch (Exception e) {
@@ -90,7 +96,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 		}
 		try {
 			connection.publish(getOutboundTopic(), payload, QoS.EXACTLY_ONCE, false);
-			Log.d(MqttService.TAG, "Sent message successfully.");
+			Log.d(MqttService.TAG, "Sent message successfully to: " + getOutboundTopic());
 		} catch (Exception e) {
 			throw new SiteWhereMqttException("Unable to publish message.", e);
 		}

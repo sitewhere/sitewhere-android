@@ -19,9 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import android.app.FragmentTransaction;
+import android.app.Service;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -32,7 +34,9 @@ import com.sitewhere.android.generated.Android;
 import com.sitewhere.android.generated.Android.AndroidSpecification._Header;
 import com.sitewhere.android.generated.Android.AndroidSpecification.changeBackground;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
-import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
+import com.sitewhere.android.mqtt.MqttService;
+import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
+import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
 import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
@@ -64,16 +68,40 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		// Verify that SiteWhere API location has been specified.
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String apiUrl = prefs.getString(IConnectivityPreferences.PREF_SITEWHERE_API_URI, null);
-		String mqttBroker = prefs.getString(
-				IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI, null);
 
-		if ((apiUrl == null) || (mqttBroker == null)) {
+		// Push current device id into MQTT settings, then get current values.
+		MqttServicePreferences updated = new MqttServicePreferences();
+		updated.setDeviceHardwareId(getUniqueDeviceId());
+		IMqttServicePreferences mqtt = MqttServicePreferences.update(updated, this);
+
+		if ((apiUrl == null) || (mqtt.getBrokerHostname() == null)) {
 			initConnectivityWizard();
 		} else {
 			initExampleApplication();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.SiteWhereActivity#getServiceClass()
+	 */
+	@Override
+	protected Class<? extends Service> getServiceClass() {
+		return MqttService.class;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.SiteWhereActivity#getServiceConfiguration()
+	 */
+	@Override
+	protected Parcelable getServiceConfiguration() {
+		return MqttServicePreferences.read(this);
 	}
 
 	/**

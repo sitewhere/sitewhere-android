@@ -39,8 +39,10 @@ public class RegistrationManager implements IMqttCallback {
 	 * @param client
 	 */
 	public void addClient(IFromSiteWhere client) {
-		Log.d(MqttService.TAG, "Registration manager adding client.");
-		clients.add(client);
+		if (!clients.contains(client)) {
+			Log.d(MqttService.TAG, "Registration manager adding client.");
+			clients.add(client);
+		}
 	}
 
 	/**
@@ -60,51 +62,61 @@ public class RegistrationManager implements IMqttCallback {
 	 */
 	@Override
 	public void connected() {
+		List<IFromSiteWhere> unreachable = new ArrayList<IFromSiteWhere>();
 		for (IFromSiteWhere client : clients) {
 			try {
 				client.connected();
 			} catch (RemoteException e) {
-				Log.w(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
-				clients.remove(client);
+				Log.e(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
+				unreachable.add(client);
 			}
+		}
+		for (IFromSiteWhere client : unreachable) {
+			clients.remove(client);
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.sitewhere.android.mqtt.IMqttCallback#onSystemCommandReceived(java.lang.String,
-	 * byte[])
+	 * @see com.sitewhere.android.mqtt.IMqttCallback#onSystemCommandReceived(java.lang.String, byte[])
 	 */
 	@Override
 	public void onSystemCommandReceived(String topic, byte[] payload) {
 		Log.d(MqttService.TAG, "Notifying clients system command was received.");
+		List<IFromSiteWhere> unreachable = new ArrayList<IFromSiteWhere>();
 		for (IFromSiteWhere client : clients) {
 			try {
 				client.receivedSystemCommand(payload);
 			} catch (RemoteException e) {
 				Log.w(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
-				clients.remove(client);
+				unreachable.add(client);
 			}
+		}
+		for (IFromSiteWhere client : unreachable) {
+			clients.remove(client);
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.sitewhere.android.mqtt.IMqttCallback#onCustomCommandReceived(java.lang.String,
-	 * byte[])
+	 * @see com.sitewhere.android.mqtt.IMqttCallback#onCustomCommandReceived(java.lang.String, byte[])
 	 */
 	@Override
 	public void onCustomCommandReceived(String topic, byte[] payload) {
 		Log.d(MqttService.TAG, "Notifying clients custom command was received.");
+		List<IFromSiteWhere> unreachable = new ArrayList<IFromSiteWhere>();
 		for (IFromSiteWhere client : clients) {
 			try {
 				client.receivedCustomCommand(payload);
 			} catch (RemoteException e) {
 				Log.w(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
-				clients.remove(client);
+				unreachable.add(client);
 			}
+		}
+		for (IFromSiteWhere client : unreachable) {
+			clients.remove(client);
 		}
 	}
 
@@ -115,13 +127,17 @@ public class RegistrationManager implements IMqttCallback {
 	 */
 	@Override
 	public void disconnected() {
+		List<IFromSiteWhere> unreachable = new ArrayList<IFromSiteWhere>();
 		for (IFromSiteWhere client : clients) {
 			try {
-				client.connected();
+				client.disconnected();
 			} catch (RemoteException e) {
 				Log.w(MqttService.TAG, "Unable to send message to client. Removing from list.", e);
-				clients.remove(client);
+				unreachable.add(client);
 			}
+		}
+		for (IFromSiteWhere client : unreachable) {
+			clients.remove(client);
 		}
 	}
 }

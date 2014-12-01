@@ -16,11 +16,13 @@
 package com.sitewhere.android;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.provider.Settings.Secure;
 import android.util.Log;
@@ -44,10 +46,24 @@ public abstract class SiteWhereActivity extends Activity {
 	protected IToSiteWhere sitewhere;
 
 	/** Handles responses from SiteWhere */
-	protected SiteWhereResponseProcessor responseProcessor;
+	protected SiteWhereResponseProcessor responseProcessor = new SiteWhereResponseProcessor();
 
 	/** Indicates if bound to service */
 	protected boolean bound = false;
+
+	/**
+	 * Get class used to create a local service instance.
+	 * 
+	 * @return
+	 */
+	protected abstract Class<? extends Service> getServiceClass();
+
+	/**
+	 * Gets the configuration data passed to the {@link Intent} for the service.
+	 * 
+	 * @return
+	 */
+	protected abstract Parcelable getServiceConfiguration();
 
 	/**
 	 * Called after connection to underlying messaging service is complete.
@@ -70,11 +86,32 @@ public abstract class SiteWhereActivity extends Activity {
 	protected abstract void onDisconnectedFromSiteWhere();
 
 	/**
-	 * Attempts to start a connection to SiteWhere on the underlying message service.
+	 * Create a connection to SiteWhere.
 	 */
 	protected void connectToSiteWhere() {
+		connectToSiteWhereLocal();
+	}
+
+	/**
+	 * Creates a connection to SiteWhere
+	 */
+	protected void connectToSiteWhereLocal() {
 		if (!bound) {
-			Intent intent = new Intent(getMessageServiceName());
+			Intent intent = new Intent(this, getServiceClass());
+			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
+			startService(intent);
+			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+		}
+	}
+
+	/**
+	 * Attempts to connect to a remote {@link Service} using an {@link Intent} that will match based
+	 * on a filter.
+	 */
+	protected void connectToSiteWhereRemote() {
+		if (!bound) {
+			Intent intent = new Intent(ISiteWhereMessaging.MESSAGING_SERVICE);
+			intent.putExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION, getServiceConfiguration());
 			startService(intent);
 			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 		}
@@ -123,15 +160,6 @@ public abstract class SiteWhereActivity extends Activity {
 		return id;
 	}
 
-	/**
-	 * Service used to transmit data to/from SiteWhere. Override to use another service.
-	 * 
-	 * @return
-	 */
-	protected String getMessageServiceName() {
-		return ISiteWhereMessaging.MQTT;
-	}
-
 	/** Handles connection to message service */
 	protected ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -144,7 +172,6 @@ public abstract class SiteWhereActivity extends Activity {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			sitewhere = IToSiteWhere.Stub.asInterface(service);
 			try {
-				responseProcessor = new SiteWhereResponseProcessor();
 				sitewhere.register(responseProcessor);
 				bound = true;
 				Log.d(TAG, "Registered with SiteWhere messaging service.");
@@ -161,6 +188,11 @@ public abstract class SiteWhereActivity extends Activity {
 		 */
 		public void onServiceDisconnected(ComponentName className) {
 			bound = false;
+			try {
+				sitewhere.unregister(responseProcessor);
+			} catch (RemoteException e) {
+				Log.e(TAG, "Unable to disconnect from messaging.");
+			}
 			sitewhere = null;
 			responseProcessor = null;
 			onDisconnectedFromSiteWhere();

@@ -29,17 +29,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.util.Log;
 
 import com.sitewhere.android.messaging.IFromSiteWhere;
+import com.sitewhere.android.messaging.ISiteWhereMessaging;
 import com.sitewhere.android.messaging.IToSiteWhere;
-import com.sitewhere.android.mqtt.preferences.IMqttConnectivityPreferences;
+import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
 
 /**
  * Service that provides MQTT connectivity to external apps.
@@ -70,7 +69,7 @@ public class MqttService extends Service {
 	private RegistrationManager registrationManager;
 
 	/** MQTT configuration */
-	private MqttConfiguration configuration;
+	private IMqttServicePreferences configuration;
 
 	/** Network availability monitor */
 	private NetworkMonitor networkMonitor;
@@ -141,7 +140,7 @@ public class MqttService extends Service {
 		IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		networkMonitor = new NetworkMonitor();
 		this.registerReceiver(networkMonitor, filter);
-		Log.d(TAG, "Monitoring network state.");
+		Log.d(TAG, "Now monitoring network state.");
 	}
 
 	/*
@@ -189,11 +188,11 @@ public class MqttService extends Service {
 				disconnect();
 
 				try {
-					mqtt.setHost(configuration.getHostname(), configuration.getPort());
+					mqtt.setHost(configuration.getBrokerHostname(), configuration.getBrokerPort());
 					connection = mqtt.blockingConnection();
 					connection.connect();
 					Log.d(TAG, "Connected to MQTT.");
-					mqttManager.connect(configuration.getHardwareId(), connection);
+					mqttManager.connect(configuration.getDeviceHardwareId(), connection);
 					registrationManager.connected();
 					connectionState = MqttConnectionState.Connected;
 				} catch (URISyntaxException e) {
@@ -214,7 +213,7 @@ public class MqttService extends Service {
 		if (isMqttConnected()) {
 			try {
 				Log.d(TAG, "Disconnecting from MQTT...");
-				mqttManager.disconnect(configuration.getHardwareId(), connection);
+				mqttManager.disconnect(configuration.getDeviceHardwareId(), connection);
 				connection.disconnect();
 				connection = null;
 				connectionState = MqttConnectionState.Disconnected;
@@ -291,64 +290,35 @@ public class MqttService extends Service {
 	}
 
 	/**
-	 * Populate an {@link MqttConfiguration} from preference data.
-	 * 
-	 * @return
-	 */
-	protected MqttConfiguration loadConfigurationFromPreferences() {
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-		String uri = prefs.getString(IMqttConnectivityPreferences.PREF_SITEWHERE_MQTT_BROKER_URI,
-				null);
-		if (uri != null) {
-			String[] parts = uri.split("[:]+");
-			if (parts.length == 0) {
-				return null;
-			} else if (parts.length == 1) {
-				return new MqttConfiguration(parts[0], 1883, getUniqueDeviceId());
-			} else {
-				try {
-					int port = Integer.parseInt(parts[1]);
-					return new MqttConfiguration(parts[0], port, getUniqueDeviceId());
-				} catch (NumberFormatException e) {
-					Log.e(TAG, "Invalid port in MQTT URI.");
-					return null;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	/**
 	 * Common handler for start request from application.
 	 * 
 	 * @param intent
 	 * @param startId
 	 */
 	protected synchronized void handleStart(Intent intent, int startId) {
-		MqttConfiguration inConfig = loadConfigurationFromPreferences();
+		IMqttServicePreferences inConfig = intent
+				.getParcelableExtra(ISiteWhereMessaging.EXTRA_CONFIGURATION);
 		if (inConfig == null) {
-			Log.e(TAG, "Missing or invalid MQTT configuration. Can not start service.");
 			return;
 		}
 
 		// Store hardware id for later use.
-		boolean needsReconnect = false;
+		boolean needsReconnect = true;
 		if (this.configuration == null) {
 			this.configuration = inConfig;
 			Log.d(TAG,
-					"Starting MQTT service for: host->" + configuration.getHostname() + " port->"
-							+ configuration.getPort() + " hardwareId->"
-							+ configuration.getHardwareId());
+					"Starting MQTT service for: host->" + configuration.getBrokerHostname()
+							+ " port->" + configuration.getBrokerPort() + " hardwareId->"
+							+ configuration.getDeviceHardwareId());
+		} else if (!inConfig.equals(this.configuration)) {
+			this.configuration = inConfig;
+			Log.d(TAG,
+					"Settings changed. Will reconnect with settings: host->"
+							+ configuration.getBrokerHostname() + " port->"
+							+ configuration.getBrokerPort() + " hardwareId->"
+							+ configuration.getDeviceHardwareId());
 		} else {
-			if (!inConfig.equals(this.configuration)) {
-				Log.d(TAG,
-						"Settings changed. Will reconnect with settings: host->"
-								+ configuration.getHostname() + " port->" + configuration.getPort()
-								+ " hardwareId->" + configuration.getHardwareId());
-				needsReconnect = true;
-			}
+			needsReconnect = false;
 		}
 
 		if ((!isMqttConnected()) || (needsReconnect)) {
