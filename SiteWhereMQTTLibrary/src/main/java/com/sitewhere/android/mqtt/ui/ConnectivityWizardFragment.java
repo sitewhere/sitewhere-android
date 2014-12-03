@@ -30,8 +30,8 @@ import com.sitewhere.android.mqtt.R;
 import com.sitewhere.android.mqtt.preferences.IMqttServicePreferences;
 import com.sitewhere.android.mqtt.preferences.MqttServicePreferences;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
+import com.sitewhere.rest.client.SiteWhereClient;
 import com.sitewhere.rest.model.system.Version;
-import com.sitewhere.rest.service.SiteWhereClient;
 import com.sitewhere.spi.ISiteWhereClient;
 import com.sitewhere.spi.SiteWhereException;
 

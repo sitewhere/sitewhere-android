@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sitewhere.android</groupId>
 	<artifactId>sitewhere-framework-library</artifactId>
-	<version>0.9.6</version>
+	<version>1.0.0</version>
 	<packaging>apk</packaging>
 
 	<properties>
