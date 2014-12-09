@@ -9,5 +9,5 @@ Required Libraries
 ------------------
 This project requires the following external libraries:
 
-1) Google Play Services - Import from {ANDROID_SDK}/extras/google/google_play_service 
-2) Compatibility Library - Import from {ANDROID_SDK}/extras/android/support/v7/appcompat
+  1) Google Play Services - Import from {ANDROID_SDK}/extras/google/google_play_service 
+  2) Compatibility Library - Import from {ANDROID_SDK}/extras/android/support/v7/appcompat
