@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sitewhere</groupId>
 	<artifactId>sitewhere-mqtt-library</artifactId>
-	<version>0.9.6</version>
+	<version>1.0.0</version>
 	<packaging>apk</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<sitewhere.version>0.9.6</sitewhere.version>
+		<sitewhere.version>1.0.0</sitewhere.version>
 	</properties>
 
 	<dependencies>

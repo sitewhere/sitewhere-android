@@ -6,9 +6,9 @@
 	<groupId>com.sitewhere.android</groupId>
 	<artifactId>example</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.6</version>
+	<version>1.0.0</version>
 	<name>SiteWhere Android Example</name>
-	<description>Example Maven project that generates</description>
+	<description>Example that sends data to SiteWhere from Android</description>
 	<url>http://www.sitewhere.org/</url>
 
 	<properties>
