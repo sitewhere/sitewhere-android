@@ -26,8 +26,8 @@ import org.fusesource.mqtt.client.Topic;
 import android.util.Log;
 
 /**
- * Default implementation of {@link IMqttInteractionManager} that has a single outbound topic
- * sending events to SiteWhere and two inbound topics for system and custom messsages.
+ * Default implementation of {@link IMqttInteractionManager} that has a single outbound topic sending events
+ * to SiteWhere and two inbound topics for system and custom messsages.
  * 
  * @author Derek
  */
@@ -40,7 +40,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	private static final String SYSTEM_TOPIC_PREFIX = "SiteWhere/system/";
 
 	/** Topic prefix for inbound command messages */
-	private static final String COMMAND_TOPIC_PREFIX = "SiteWhere/command/";
+	private static final String COMMAND_TOPIC_PREFIX = "SiteWhere/commands/";
 
 	/** Topic for receiving commands */
 	private Topic commandTopic;
@@ -64,8 +64,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	 * org.fusesource.mqtt.client.BlockingConnection)
 	 */
 	@Override
-	public void connect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttException {
+	public void connect(String hardwareId, BlockingConnection connection) throws SiteWhereMqttException {
 		this.connection = connection;
 		if ((executor != null) && (!executor.isShutdown())) {
 			executor.shutdownNow();
@@ -109,8 +108,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	 * org.fusesource.mqtt.client.BlockingConnection)
 	 */
 	@Override
-	public void disconnect(String hardwareId, BlockingConnection connection)
-			throws SiteWhereMqttException {
+	public void disconnect(String hardwareId, BlockingConnection connection) throws SiteWhereMqttException {
 		try {
 			connection.unsubscribe(new String[] { getCommandTopicPrefix() + hardwareId,
 					getSystemTopicPrefix() + hardwareId });
@@ -151,8 +149,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 					if (connection.isConnected()) {
 						Log.e(MqttService.TAG, "Unhandled MQTT exception.", e);
 					} else {
-						Log.d(MqttService.TAG,
-								"Ending message processing due to failed connection.");
+						Log.d(MqttService.TAG, "Ending message processing due to failed connection.");
 						break;
 					}
 				}
@@ -163,8 +160,7 @@ public class DefaultMqttInteractionManager implements IMqttInteractionManager {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.sitewhere.android.mqtt.IMqttInteractionManager#setCallback(com.sitewhere.android.mqtt
+	 * @see com.sitewhere.android.mqtt.IMqttInteractionManager#setCallback(com.sitewhere.android.mqtt
 	 * .IMqttCallback)
 	 */
 	@Override
