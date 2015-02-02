@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 
 import android.util.Log;
 
+import com.sitewhere.spi.device.event.IDeviceEventOriginator;
+
 /**
  * Extends {@link SiteWhereProtobufActivity} to automatically decode custom commands that were encoded using
  * the hybrid Java format. The hybid format uses protocol buffers for system commands and responses, but
@@ -34,14 +36,28 @@ public abstract class SiteWhereHybridProtobufActivity extends SiteWhereProtobufA
 
 			String commandName = (String) in.readObject();
 			Object[] parameters = (Object[]) in.readObject();
+			Object[] parametersWithOriginator = new Object[parameters.length + 1];
 			Class<?>[] types = new Class[parameters.length];
+			Class<?>[] typesWithOriginator = new Class[parameters.length + 1];
 			int i = 0;
 			for (Object parameter : parameters) {
-				types[i++] = parameter.getClass();
+				types[i] = parameter.getClass();
+				typesWithOriginator[i] = types[i];
+				parametersWithOriginator[i] = parameters[i];
+				i++;
 			}
+			IDeviceEventOriginator originator = (IDeviceEventOriginator) in.readObject();
+			typesWithOriginator[i] = IDeviceEventOriginator.class;
+			parametersWithOriginator[i] = originator;
 
-			Method method = getClass().getMethod(commandName, types);
-			method.invoke(this, parameters);
+			Method method = null;
+			try {
+				method = getClass().getMethod(commandName, typesWithOriginator);
+				method.invoke(this, parametersWithOriginator);
+			} catch (NoSuchMethodException e) {
+				method = getClass().getMethod(commandName, types);
+				method.invoke(this, parameters);
+			}
 		} catch (StreamCorruptedException e) {
 			Log.e(TAG, "Unable to decode command in hybrid mode.", e);
 		} catch (IOException e) {

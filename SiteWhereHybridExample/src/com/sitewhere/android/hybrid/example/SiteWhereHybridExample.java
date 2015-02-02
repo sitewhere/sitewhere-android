@@ -37,6 +37,7 @@ import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.android.protobuf.SiteWhereHybridProtobufActivity;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.spi.device.event.IDeviceEventOriginator;
 
 /**
  * SiteWhere sample activity.
@@ -125,6 +126,9 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 	 */
 	@Override
 	public void onWizardComplete() {
+		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+		fragmentTransaction.remove(wizard);
+		fragmentTransaction.commit();
 		initExampleApplication();
 		connectToSiteWhere();
 	}
@@ -214,9 +218,11 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 	 * Command that changes the background color.
 	 * 
 	 * @param color
+	 * @param originator
 	 * @throws SiteWhereMessagingException
 	 */
-	public void changeBackground(final String color) throws SiteWhereMessagingException {
+	public void changeBackground(final String color, IDeviceEventOriginator originator)
+			throws SiteWhereMessagingException {
 		runOnUiThread(new Runnable() {
 
 			@Override
@@ -224,7 +230,7 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 				getWindow().getDecorView().setBackgroundColor(Color.parseColor(color));
 			}
 		});
-		sendAck(getUniqueDeviceId(), null, "Updated background color.");
+		sendAck(getUniqueDeviceId(), originator.getEventId(), "Updated background color.");
 		Log.i(TAG, "Sent reponse to 'changeBackground' command.");
 	}
 
