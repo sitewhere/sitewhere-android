@@ -32,8 +32,8 @@ import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.Comm
 import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.RegisterDevice;
 
 /**
- * Extension of {@link SiteWhereActivity} that adds support for default Google Protocol Buffers
- * interactions with remote SiteWhere instance.
+ * Extension of {@link SiteWhereActivity} that adds support for default Google Protocol Buffers interactions
+ * with remote SiteWhere instance.
  * 
  * @author Derek
  */
@@ -62,8 +62,25 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 */
 	public void registerDevice(String hardwareId, String specificationToken, String originator)
 			throws SiteWhereMessagingException {
+		registerDevice(hardwareId, specificationToken, null, originator);
+	}
+
+	/**
+	 * Register a device with SiteWhere. (Includes token of Site for device)
+	 * 
+	 * @param hardwareId
+	 * @param specificationToken
+	 * @param siteToken
+	 * @param originator
+	 * @throws SiteWhereMessagingException
+	 */
+	public void registerDevice(String hardwareId, String specificationToken, String siteToken,
+			String originator) throws SiteWhereMessagingException {
 		RegisterDevice.Builder rb = RegisterDevice.newBuilder();
 		rb.setHardwareId(hardwareId).setSpecificationToken(specificationToken);
+		if (siteToken != null) {
+			rb.setSiteToken(siteToken);
+		}
 		sendMessage(Command.REGISTER, rb.build(), originator, "registration");
 	}
 
@@ -118,11 +135,10 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param elevation
 	 * @throws SiteWhereMessagingException
 	 */
-	public void sendLocation(String hardwareId, String originator, double latitude,
-			double longitude, double elevation) throws SiteWhereMessagingException {
+	public void sendLocation(String hardwareId, String originator, double latitude, double longitude,
+			double elevation) throws SiteWhereMessagingException {
 		SiteWhere.DeviceLocation.Builder lb = SiteWhere.DeviceLocation.newBuilder();
-		lb.setHardwareId(hardwareId).setLatitude(latitude).setLongitude(longitude)
-				.setElevation(elevation);
+		lb.setHardwareId(hardwareId).setLatitude(latitude).setLongitude(longitude).setElevation(elevation);
 		sendMessage(Command.DEVICELOCATION, lb.build(), originator, "location");
 	}
 
@@ -151,8 +167,8 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param label
 	 * @throws SiteWhereMessagingException
 	 */
-	protected void sendMessage(SiteWhere.Command command, AbstractMessageLite message,
-			String originator, String label) throws SiteWhereMessagingException {
+	protected void sendMessage(SiteWhere.Command command, AbstractMessageLite message, String originator,
+			String label) throws SiteWhereMessagingException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
 			SiteWhere.Header.Builder builder = SiteWhere.Header.newBuilder();
