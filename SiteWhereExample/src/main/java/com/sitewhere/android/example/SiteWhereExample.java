@@ -187,11 +187,11 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 		Log.d(TAG, "Connected to SiteWhere.");
 		try {
 			// This registers with the first Site in the system.
-			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
+			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
 
 			// This registers with a specific site.
-			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41",
-					"545cd3c9-2bdc-4d27-a365-2e8c8b9f07fd", null);
+			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41",
+			// "545cd3c9-2bdc-4d27-a365-2e8c8b9f07fd", null);
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Unable to send device registration to SiteWhere.", e);
 		}
