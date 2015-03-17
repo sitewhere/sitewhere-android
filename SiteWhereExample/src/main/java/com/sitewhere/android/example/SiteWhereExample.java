@@ -49,7 +49,8 @@ import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Registr
  * 
  * @author Derek
  */
-public class SiteWhereExample extends SiteWhereProtobufActivity implements IConnectivityWizardListener {
+public class SiteWhereExample extends SiteWhereProtobufActivity implements
+		IConnectivityWizardListener {
 
 	/** Tag for logging */
 	private static final String TAG = "SiteWhereExample";
@@ -186,12 +187,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	protected void onConnectedToSiteWhere() {
 		Log.d(TAG, "Connected to SiteWhere.");
 		try {
-			// This registers with the first Site in the system.
-			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
-
-			// This registers with a specific site.
-			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41",
-					"545cd3c9-2bdc-4d27-a365-2e8c8b9f07fd", null);
+			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Unable to send device registration to SiteWhere.", e);
 		}
@@ -200,7 +196,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleRegistrationAck(com.sitewhere
+	 * @see
+	 * com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleRegistrationAck(com.sitewhere
 	 * .device.provisioning.protobuf.proto.Sitewhere.Device.Header,
 	 * com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck)
 	 */
@@ -217,7 +214,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 		}
 		case REGISTRATION_ERROR: {
 			Log.d(TAG,
-					"Error registering device. " + ack.getErrorType().name() + ": " + ack.getErrorMessage());
+					"Error registering device. " + ack.getErrorType().name() + ": "
+							+ ack.getErrorMessage());
 			break;
 		}
 		}
@@ -256,7 +254,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 
 					@Override
 					public void run() {
-						getWindow().getDecorView().setBackgroundColor(Color.parseColor(cb.getColor()));
+						getWindow().getDecorView().setBackgroundColor(
+								Color.parseColor(cb.getColor()));
 					}
 				});
 				sendAck(getUniqueDeviceId(), header.getOriginator(), "Updated background color.");
