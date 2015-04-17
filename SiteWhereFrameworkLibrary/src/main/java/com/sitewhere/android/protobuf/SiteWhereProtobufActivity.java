@@ -22,14 +22,16 @@ import java.io.IOException;
 import android.util.Log;
 
 import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.ByteString;
 import com.sitewhere.android.SiteWhereActivity;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.Command;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.RegisterDevice;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere.Command;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere.RegisterDevice;
 
 /**
  * Extension of {@link SiteWhereActivity} that adds support for default Google Protocol Buffers interactions
@@ -93,6 +95,14 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	public abstract void handleRegistrationAck(Header header, RegistrationAck ack);
 
 	/**
+	 * Handle response from device stream create request.
+	 * 
+	 * @param header
+	 * @param ack
+	 */
+	public abstract void handleDeviceStreamAck(Header header, DeviceStreamAck ack);
+
+	/**
 	 * Send an acknowledgement event to SiteWhere.
 	 * 
 	 * @param hardwareId
@@ -122,7 +132,7 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 		SiteWhere.Measurement.Builder mxb = SiteWhere.Measurement.newBuilder();
 		mxb.setMeasurementId(name).setMeasurementValue(value);
 		mxsb.addMeasurement(mxb.build());
-		sendMessage(Command.DEVICEMEASUREMENT, mxsb.build(), originator, "measurement");
+		sendMessage(Command.DEVICE_MEASUREMENTS, mxsb.build(), originator, "measurement");
 	}
 
 	/**
@@ -139,7 +149,7 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 			double elevation) throws SiteWhereMessagingException {
 		SiteWhere.DeviceLocation.Builder lb = SiteWhere.DeviceLocation.newBuilder();
 		lb.setHardwareId(hardwareId).setLatitude(latitude).setLongitude(longitude).setElevation(elevation);
-		sendMessage(Command.DEVICELOCATION, lb.build(), originator, "location");
+		sendMessage(Command.DEVICE_LOCATION, lb.build(), originator, "location");
 	}
 
 	/**
@@ -155,7 +165,41 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 			throws SiteWhereMessagingException {
 		SiteWhere.DeviceAlert.Builder ab = SiteWhere.DeviceAlert.newBuilder();
 		ab.setHardwareId(hardwareId).setAlertType(alertType).setAlertMessage(message);
-		sendMessage(Command.DEVICEALERT, ab.build(), originator, "alert");
+		sendMessage(Command.DEVICE_ALERT, ab.build(), originator, "alert");
+	}
+
+	/**
+	 * Send a device stream create request to SiteWhere.
+	 * 
+	 * @param hardwareId
+	 * @param originator
+	 * @param streamId
+	 * @param contentType
+	 * @throws SiteWhereMessagingException
+	 */
+	public void sendDeviceStreamCreate(String hardwareId, String originator, String streamId,
+			String contentType) throws SiteWhereMessagingException {
+		SiteWhere.DeviceStream.Builder builder = SiteWhere.DeviceStream.newBuilder();
+		builder.setHardwareId(hardwareId).setStreamId(streamId).setContentType(contentType);
+		sendMessage(Command.DEVICE_STREAM, builder.build(), originator, "device stream");
+	}
+
+	/**
+	 * Send a device stream data request to SiteWhere.
+	 * 
+	 * @param hardwareId
+	 * @param originator
+	 * @param streamId
+	 * @param sequenceNumber
+	 * @param data
+	 * @throws SiteWhereMessagingException
+	 */
+	public void sendDeviceStreamData(String hardwareId, String originator, String streamId,
+			long sequenceNumber, byte[] data) throws SiteWhereMessagingException {
+		SiteWhere.DeviceStreamData.Builder builder = SiteWhere.DeviceStreamData.newBuilder();
+		builder.setHardwareId(hardwareId).setStreamId(streamId).setSequenceNumber(sequenceNumber)
+				.setData(ByteString.copyFrom(data));
+		sendMessage(Command.DEVICE_STREAM_DATA, builder.build(), originator, "device stream data");
 	}
 
 	/**
@@ -207,6 +251,12 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 			case REGISTER_ACK: {
 				RegistrationAck ack = RegistrationAck.parseDelimitedFrom(stream);
 				handleRegistrationAck(header, ack);
+				break;
+			}
+			case DEVICE_STREAM_ACK: {
+				DeviceStreamAck ack = DeviceStreamAck.parseDelimitedFrom(stream);
+				handleDeviceStreamAck(header, ack);
+				break;
 			}
 			}
 		} catch (IOException e) {
