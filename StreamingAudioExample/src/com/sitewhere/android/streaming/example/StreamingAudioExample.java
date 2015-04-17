@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.sitewhere.android.hybrid.example;
+package com.sitewhere.android.streaming.example;
+
+import java.util.UUID;
 
 import android.app.FragmentTransaction;
 import android.app.Service;
@@ -38,6 +40,7 @@ import com.sitewhere.android.protobuf.SiteWhereHybridProtobufActivity;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAckState;
 import com.sitewhere.spi.device.event.IDeviceEventOriginator;
 
 /**
@@ -45,11 +48,11 @@ import com.sitewhere.spi.device.event.IDeviceEventOriginator;
  * 
  * @author Derek
  */
-public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity implements
+public class StreamingAudioExample extends SiteWhereHybridProtobufActivity implements
 		IConnectivityWizardListener {
 
 	/** Tag for logging */
-	private static final String TAG = "SiteWhereHybridExample";
+	private static final String TAG = "StreamingAudioExample";
 
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
@@ -117,7 +120,7 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 	 */
 	protected void initExampleApplication() {
 		connectToSiteWhere();
-		getActionBar().setTitle("Hybrid Protocol Example");
+		getActionBar().setTitle("Streaming Audio Example");
 	}
 
 	/*
@@ -213,6 +216,21 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 			break;
 		}
 		}
+		if (ack.getState() != RegistrationAckState.REGISTRATION_ERROR) {
+			createStream();
+		}
+	}
+
+	/**
+	 * Create a stream using a random UUID for the id.
+	 */
+	protected void createStream() {
+		try {
+			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "image/jpeg");
+			Log.d(TAG, "Sent device stream create message.");
+		} catch (SiteWhereMessagingException e) {
+			Log.d(TAG, "Unable to send device stream create message.", e);
+		}
 	}
 
 	/*
@@ -224,6 +242,20 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck)
 	 */
 	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
+		switch (ack.getState()) {
+		case STREAM_CREATED: {
+			Log.d(TAG, "Device stream created successfully.");
+			break;
+		}
+		case STREAM_EXISTS: {
+			Log.d(TAG, "Device stream already existed.");
+			break;
+		}
+		case STREAM_FAILED: {
+			Log.d(TAG, "Unable to create device stream.");
+			break;
+		}
+		}
 	}
 
 	/**
