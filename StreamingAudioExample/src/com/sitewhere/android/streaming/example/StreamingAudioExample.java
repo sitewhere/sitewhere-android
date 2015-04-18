@@ -238,7 +238,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	 */
 	protected void createStream() {
 		try {
-			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "image/jpeg");
+			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "audio/L24");
 			Log.d(TAG, "Sent device stream create message.");
 		} catch (SiteWhereMessagingException e) {
 			Log.d(TAG, "Unable to send device stream create message.", e);
