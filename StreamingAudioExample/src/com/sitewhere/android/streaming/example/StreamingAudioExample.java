@@ -19,8 +19,13 @@ import java.util.UUID;
 
 import android.app.FragmentTransaction;
 import android.app.Service;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -38,6 +43,7 @@ import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.android.protobuf.SiteWhereHybridProtobufActivity;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAckState;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAckState;
@@ -53,6 +59,12 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 
 	/** Tag for logging */
 	private static final String TAG = "StreamingAudioExample";
+
+	/** Channel configuration */
+	private static final int CHANNEL = AudioFormat.CHANNEL_OUT_DEFAULT;
+
+	/** Encoding choice */
+	private static final int ENCODING = AudioFormat.ENCODING_DEFAULT;
 
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
@@ -242,6 +254,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck)
 	 */
 	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
+		Log.d(TAG, "Received ack message for stream: " + ack.getStreamId());
 		switch (ack.getState()) {
 		case STREAM_CREATED: {
 			Log.d(TAG, "Device stream created successfully.");
@@ -256,6 +269,62 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 			break;
 		}
 		}
+		if (ack.getState() != DeviceStreamAckState.STREAM_FAILED) {
+			startStreaming(ack.getStreamId());
+		}
+	}
+
+	/**
+	 * Start streaming data to SiteWhere for 10 seconds.
+	 * 
+	 * @param streamId
+	 */
+	protected void startStreaming(String streamId) {
+		Log.d(TAG, "About to start streaming for " + streamId);
+
+		// Find an acceptable sample rate and calculate buffer size.
+		AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+		String sampleRateStr = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+		String framesPerBuffer = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+
+		if (sampleRateStr == null) {
+			Log.e(TAG, "Unable to determine sample rate.");
+			return;
+		}
+		int sampleRate = Integer.parseInt(sampleRateStr);
+
+		if (framesPerBuffer == null) {
+			Log.e(TAG, "Unable to find frames per buffer.");
+			return;
+		}
+		int bufferSize = Integer.parseInt(framesPerBuffer) * 16;
+
+		Log.d(TAG, "Using sample rate " + sampleRate);
+
+		byte[] buffer = new byte[bufferSize];
+		Log.d(TAG, "Using buffer size " + bufferSize);
+
+		// Create the recorder.
+		AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, CHANNEL, ENCODING,
+				bufferSize);
+		recorder.startRecording();
+
+		long stopTime = System.currentTimeMillis() + (10 * 1000);
+		long seqNum = 0;
+		while (System.currentTimeMillis() < stopTime) {
+			int chunkSize = recorder.read(buffer, 0, buffer.length);
+			byte[] chunk = new byte[chunkSize];
+			System.arraycopy(buffer, 0, chunk, 0, chunkSize);
+			try {
+				sendDeviceStreamData(getUniqueDeviceId(), null, streamId, seqNum++, chunk);
+				Log.d(TAG, "Sent chunk for " + streamId + " sequence number " + seqNum + ".");
+			} catch (SiteWhereMessagingException e) {
+				Log.e(TAG, "Error sending chunk for " + streamId + " sequence number " + seqNum + ".", e);
+			}
+		}
+
+		recorder.release();
+		Log.d(TAG, "Finished streaming for " + streamId);
 	}
 
 	/**
