@@ -64,7 +64,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	private static final int CHANNEL = AudioFormat.CHANNEL_OUT_DEFAULT;
 
 	/** Encoding choice */
-	private static final int ENCODING = AudioFormat.ENCODING_DEFAULT;
+	private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
@@ -238,7 +238,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	 */
 	protected void createStream() {
 		try {
-			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "audio/L24");
+			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "audio/x-ac3");
 			Log.d(TAG, "Sent device stream create message.");
 		} catch (SiteWhereMessagingException e) {
 			Log.d(TAG, "Unable to send device stream create message.", e);
