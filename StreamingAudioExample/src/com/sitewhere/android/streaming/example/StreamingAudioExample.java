@@ -25,6 +25,7 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -47,6 +48,7 @@ import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Device
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
 import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAckState;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Model.DeviceStreamData;
 import com.sitewhere.spi.device.event.IDeviceEventOriginator;
 
 /**
@@ -68,6 +70,18 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
+
+	/** Sample rate for recording */
+	private int sampleRate;
+
+	/** Calculated buffer size for streaming */
+	private int bufferSize;
+
+	/** Used to play back streaming audio */
+	private AudioTrack speaker;
+
+	/** Tracks sequence number passed to request data */
+	private long sequenceNumber;
 
 	/*
 	 * (non-Javadoc)
@@ -238,7 +252,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	 */
 	protected void createStream() {
 		try {
-			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "audio/x-ac3");
+			sendDeviceStreamCreate(getUniqueDeviceId(), null, UUID.randomUUID().toString(), "audio/L16");
 			Log.d(TAG, "Sent device stream create message.");
 		} catch (SiteWhereMessagingException e) {
 			Log.d(TAG, "Unable to send device stream create message.", e);
@@ -291,13 +305,13 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 			Log.e(TAG, "Unable to determine sample rate.");
 			return;
 		}
-		int sampleRate = Integer.parseInt(sampleRateStr);
+		sampleRate = Integer.parseInt(sampleRateStr);
 
 		if (framesPerBuffer == null) {
 			Log.e(TAG, "Unable to find frames per buffer.");
 			return;
 		}
-		int bufferSize = Integer.parseInt(framesPerBuffer) * 16;
+		bufferSize = Integer.parseInt(framesPerBuffer) * 16;
 
 		Log.d(TAG, "Using sample rate " + sampleRate);
 
@@ -325,6 +339,56 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 
 		recorder.release();
 		Log.d(TAG, "Finished streaming for " + streamId);
+
+		// Fininshed recording. Start playback.
+		startPlayback(streamId);
+	}
+
+	/**
+	 * Start playing back the stream that was previously recorded.
+	 * 
+	 * @param streamId
+	 */
+	protected void startPlayback(String streamId) {
+		speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, CHANNEL, ENCODING, bufferSize,
+				AudioTrack.MODE_STREAM);
+		speaker.play();
+		sequenceNumber = 0;
+		try {
+			requestDeviceStreamData(getUniqueDeviceId(), streamId, sequenceNumber);
+		} catch (SiteWhereMessagingException e) {
+			Log.e(TAG, "Unable to request data from device stream.", e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleReceivedDeviceStreamData(com.sitewhere
+	 * .device.communication.protobuf.proto.Sitewhere.Device.Header,
+	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Model.DeviceStreamData)
+	 */
+	@Override
+	public void handleReceivedDeviceStreamData(Header header, DeviceStreamData data) {
+		byte[] chunk = data.getData().toByteArray();
+		if (chunk.length > 0) {
+			// Push streamed data into AudioTrack.
+			Log.d(TAG, "Playing chunk " + sequenceNumber + " with size " + chunk.length + ".");
+			speaker.write(chunk, 0, bufferSize);
+			sequenceNumber++;
+
+			// Request next chunk;
+			try {
+				requestDeviceStreamData(getUniqueDeviceId(), data.getStreamId(), sequenceNumber);
+			} catch (SiteWhereMessagingException e) {
+				Log.e(TAG, "Unable to request data from device stream.", e);
+			}
+		} else {
+			speaker.release();
+			speaker = null;
+			Log.d(TAG, "Finished playing stream.");
+		}
 	}
 
 	/**
