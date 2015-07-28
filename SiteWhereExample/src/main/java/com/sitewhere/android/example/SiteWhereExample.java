@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Reveal Technologies, LLC. All rights reserved. http://www.reveal-tech.com
+ * Copyright (c) SiteWhere, LLC. All rights reserved. http://www.sitewhere.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,16 +41,16 @@ import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
 import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
 
 /**
  * SiteWhere sample activity.
  * 
  * @author Derek
  */
-public class SiteWhereExample extends SiteWhereProtobufActivity implements
-		IConnectivityWizardListener {
+public class SiteWhereExample extends SiteWhereProtobufActivity implements IConnectivityWizardListener {
 
 	/** Tag for logging */
 	private static final String TAG = "SiteWhereExample";
@@ -187,7 +187,12 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 	protected void onConnectedToSiteWhere() {
 		Log.d(TAG, "Connected to SiteWhere.");
 		try {
-			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
+			// This registers with the first Site in the system.
+			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
+
+			// This registers with a specific site.
+			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41",
+					"bb105f8d-3150-41f5-b9d1-db04965668d3", null);
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Unable to send device registration to SiteWhere.", e);
 		}
@@ -196,8 +201,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleRegistrationAck(com.sitewhere
+	 * @see com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleRegistrationAck(com.sitewhere
 	 * .device.provisioning.protobuf.proto.Sitewhere.Device.Header,
 	 * com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck)
 	 */
@@ -214,8 +218,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		}
 		case REGISTRATION_ERROR: {
 			Log.d(TAG,
-					"Error registering device. " + ack.getErrorType().name() + ": "
-							+ ack.getErrorMessage());
+					"Error registering device. " + ack.getErrorType().name() + ": " + ack.getErrorMessage());
 			break;
 		}
 		}
@@ -224,6 +227,17 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Unable to send location.", e);
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleDeviceStreamAck(com.sitewhere.device
+	 * .communication.protobuf.proto.Sitewhere.Device.Header,
+	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck)
+	 */
+	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
 	}
 
 	/*
@@ -254,8 +268,7 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements
 
 					@Override
 					public void run() {
-						getWindow().getDecorView().setBackgroundColor(
-								Color.parseColor(cb.getColor()));
+						getWindow().getDecorView().setBackgroundColor(Color.parseColor(cb.getColor()));
 					}
 				});
 				sendAck(getUniqueDeviceId(), header.getOriginator(), "Updated background color.");

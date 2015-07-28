@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Reveal Technologies, LLC. All rights reserved. http://www.reveal-tech.com
+ * Copyright (c) SiteWhere, LLC. All rights reserved. http://www.sitewhere.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,22 @@ import java.io.IOException;
 import android.util.Log;
 
 import com.google.protobuf.AbstractMessageLite;
+import com.google.protobuf.ByteString;
 import com.sitewhere.android.SiteWhereActivity;
 import com.sitewhere.android.messaging.SiteWhereMessagingException;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.Command;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.SiteWhere.RegisterDevice;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Model;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Model.DeviceStreamData;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere.Command;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.SiteWhere.RegisterDevice;
 
 /**
- * Extension of {@link SiteWhereActivity} that adds support for default Google Protocol Buffers
- * interactions with remote SiteWhere instance.
+ * Extension of {@link SiteWhereActivity} that adds support for default Google Protocol Buffers interactions
+ * with remote SiteWhere instance.
  * 
  * @author Derek
  */
@@ -62,9 +66,26 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 */
 	public void registerDevice(String hardwareId, String specificationToken, String originator)
 			throws SiteWhereMessagingException {
+		registerDevice(hardwareId, specificationToken, null, originator);
+	}
+
+	/**
+	 * Register a device with SiteWhere. (Includes token of Site for device)
+	 * 
+	 * @param hardwareId
+	 * @param specificationToken
+	 * @param siteToken
+	 * @param originator
+	 * @throws SiteWhereMessagingException
+	 */
+	public void registerDevice(String hardwareId, String specificationToken, String siteToken,
+			String originator) throws SiteWhereMessagingException {
 		RegisterDevice.Builder rb = RegisterDevice.newBuilder();
 		rb.setHardwareId(hardwareId).setSpecificationToken(specificationToken);
-		sendMessage(Command.REGISTER, rb.build(), originator, "registration");
+		if (siteToken != null) {
+			rb.setSiteToken(siteToken);
+		}
+		sendMessage(Command.SEND_REGISTRATION, rb.build(), originator, "registration");
 	}
 
 	/**
@@ -73,7 +94,8 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param header
 	 * @param ack
 	 */
-	public abstract void handleRegistrationAck(Header header, RegistrationAck ack);
+	public void handleRegistrationAck(Header header, RegistrationAck ack) {
+	}
 
 	/**
 	 * Send an acknowledgement event to SiteWhere.
@@ -87,7 +109,7 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 			throws SiteWhereMessagingException {
 		SiteWhere.Acknowledge.Builder builder = SiteWhere.Acknowledge.newBuilder();
 		SiteWhere.Acknowledge ack = builder.setHardwareId(hardwareId).setMessage(message).build();
-		sendMessage(Command.ACKNOWLEDGE, ack, originator, "ack");
+		sendMessage(Command.SEND_ACKNOWLEDGEMENT, ack, originator, "ack");
 	}
 
 	/**
@@ -101,11 +123,11 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 */
 	public void sendMeasurement(String hardwareId, String originator, String name, double value)
 			throws SiteWhereMessagingException {
-		SiteWhere.DeviceMeasurements.Builder mxsb = SiteWhere.DeviceMeasurements.newBuilder();
-		SiteWhere.Measurement.Builder mxb = SiteWhere.Measurement.newBuilder();
+		Model.DeviceMeasurements.Builder mxsb = Model.DeviceMeasurements.newBuilder();
+		Model.Measurement.Builder mxb = Model.Measurement.newBuilder();
 		mxb.setMeasurementId(name).setMeasurementValue(value);
 		mxsb.addMeasurement(mxb.build());
-		sendMessage(Command.DEVICEMEASUREMENT, mxsb.build(), originator, "measurement");
+		sendMessage(Command.SEND_DEVICE_MEASUREMENTS, mxsb.build(), originator, "measurement");
 	}
 
 	/**
@@ -118,12 +140,11 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param elevation
 	 * @throws SiteWhereMessagingException
 	 */
-	public void sendLocation(String hardwareId, String originator, double latitude,
-			double longitude, double elevation) throws SiteWhereMessagingException {
-		SiteWhere.DeviceLocation.Builder lb = SiteWhere.DeviceLocation.newBuilder();
-		lb.setHardwareId(hardwareId).setLatitude(latitude).setLongitude(longitude)
-				.setElevation(elevation);
-		sendMessage(Command.DEVICELOCATION, lb.build(), originator, "location");
+	public void sendLocation(String hardwareId, String originator, double latitude, double longitude,
+			double elevation) throws SiteWhereMessagingException {
+		Model.DeviceLocation.Builder lb = Model.DeviceLocation.newBuilder();
+		lb.setHardwareId(hardwareId).setLatitude(latitude).setLongitude(longitude).setElevation(elevation);
+		sendMessage(Command.SEND_DEVICE_LOCATION, lb.build(), originator, "location");
 	}
 
 	/**
@@ -137,9 +158,76 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 */
 	public void sendAlert(String hardwareId, String originator, String alertType, String message)
 			throws SiteWhereMessagingException {
-		SiteWhere.DeviceAlert.Builder ab = SiteWhere.DeviceAlert.newBuilder();
+		Model.DeviceAlert.Builder ab = Model.DeviceAlert.newBuilder();
 		ab.setHardwareId(hardwareId).setAlertType(alertType).setAlertMessage(message);
-		sendMessage(Command.DEVICEALERT, ab.build(), originator, "alert");
+		sendMessage(Command.SEND_DEVICE_ALERT, ab.build(), originator, "alert");
+	}
+
+	/**
+	 * Send a device stream create request to SiteWhere.
+	 * 
+	 * @param hardwareId
+	 * @param originator
+	 * @param streamId
+	 * @param contentType
+	 * @throws SiteWhereMessagingException
+	 */
+	public void sendDeviceStreamCreate(String hardwareId, String originator, String streamId,
+			String contentType) throws SiteWhereMessagingException {
+		Model.DeviceStream.Builder builder = Model.DeviceStream.newBuilder();
+		builder.setHardwareId(hardwareId).setStreamId(streamId).setContentType(contentType);
+		sendMessage(Command.SEND_DEVICE_STREAM, builder.build(), originator, "device stream");
+	}
+
+	/**
+	 * Handle response from device stream create request.
+	 * 
+	 * @param header
+	 * @param ack
+	 */
+	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
+	}
+
+	/**
+	 * Send a device stream data request to SiteWhere.
+	 * 
+	 * @param hardwareId
+	 * @param originator
+	 * @param streamId
+	 * @param sequenceNumber
+	 * @param data
+	 * @throws SiteWhereMessagingException
+	 */
+	public void sendDeviceStreamData(String hardwareId, String originator, String streamId,
+			long sequenceNumber, byte[] data) throws SiteWhereMessagingException {
+		Model.DeviceStreamData.Builder builder = Model.DeviceStreamData.newBuilder();
+		builder.setHardwareId(hardwareId).setStreamId(streamId).setSequenceNumber(sequenceNumber)
+				.setData(ByteString.copyFrom(data));
+		sendMessage(Command.SEND_DEVICE_STREAM_DATA, builder.build(), originator, "device stream data");
+	}
+
+	/**
+	 * Send request for a chunk of device stream data.
+	 * 
+	 * @param hardwareId
+	 * @param streamId
+	 * @param sequenceNumber
+	 * @throws SiteWhereMessagingException
+	 */
+	public void requestDeviceStreamData(String hardwareId, String streamId, long sequenceNumber)
+			throws SiteWhereMessagingException {
+		SiteWhere.DeviceStreamDataRequest.Builder builder = SiteWhere.DeviceStreamDataRequest.newBuilder();
+		builder.setHardwareId(hardwareId).setStreamId(streamId).setSequenceNumber(sequenceNumber);
+		sendMessage(Command.REQUEST_DEVICE_STREAM_DATA, builder.build(), null, "request device stream data");
+	}
+
+	/**
+	 * Handle device stream data being streamed from SiteWhere.
+	 * 
+	 * @param header
+	 * @param data
+	 */
+	public void handleReceivedDeviceStreamData(Header header, DeviceStreamData data) {
 	}
 
 	/**
@@ -151,8 +239,8 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 	 * @param label
 	 * @throws SiteWhereMessagingException
 	 */
-	protected void sendMessage(SiteWhere.Command command, AbstractMessageLite message,
-			String originator, String label) throws SiteWhereMessagingException {
+	protected void sendMessage(SiteWhere.Command command, AbstractMessageLite message, String originator,
+			String label) throws SiteWhereMessagingException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
 			SiteWhere.Header.Builder builder = SiteWhere.Header.newBuilder();
@@ -188,9 +276,20 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 		try {
 			Header header = Device.Header.parseDelimitedFrom(stream);
 			switch (header.getCommand()) {
-			case REGISTER_ACK: {
+			case ACK_REGISTRATION: {
 				RegistrationAck ack = RegistrationAck.parseDelimitedFrom(stream);
 				handleRegistrationAck(header, ack);
+				break;
+			}
+			case ACK_DEVICE_STREAM: {
+				DeviceStreamAck ack = DeviceStreamAck.parseDelimitedFrom(stream);
+				handleDeviceStreamAck(header, ack);
+				break;
+			}
+			case RECEIVE_DEVICE_STREAM_DATA: {
+				DeviceStreamData chunk = DeviceStreamData.parseDelimitedFrom(stream);
+				handleReceivedDeviceStreamData(header, chunk);
+				break;
 			}
 			}
 		} catch (IOException e) {

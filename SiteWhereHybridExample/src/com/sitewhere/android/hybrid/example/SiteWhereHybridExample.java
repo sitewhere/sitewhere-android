@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Reveal Technologies, LLC. All rights reserved. http://www.reveal-tech.com
+ * Copyright (c) SiteWhere, LLC. All rights reserved. http://www.sitewhere.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,9 @@ import com.sitewhere.android.mqtt.ui.ConnectivityWizardFragment;
 import com.sitewhere.android.mqtt.ui.IConnectivityWizardListener;
 import com.sitewhere.android.preferences.IConnectivityPreferences;
 import com.sitewhere.android.protobuf.SiteWhereHybridProtobufActivity;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.Header;
-import com.sitewhere.device.provisioning.protobuf.proto.Sitewhere.Device.RegistrationAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.Header;
+import com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.RegistrationAck;
 import com.sitewhere.spi.device.event.IDeviceEventOriginator;
 
 /**
@@ -212,6 +213,17 @@ public class SiteWhereHybridExample extends SiteWhereHybridProtobufActivity impl
 			break;
 		}
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.sitewhere.android.protobuf.SiteWhereProtobufActivity#handleDeviceStreamAck(com.sitewhere.device
+	 * .communication.protobuf.proto.Sitewhere.Device.Header,
+	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck)
+	 */
+	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
 	}
 
 	/**
