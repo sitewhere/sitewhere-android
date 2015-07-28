@@ -16,6 +16,10 @@
 package com.sitewhere.android.streaming.example;
 
 import java.util.UUID;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import android.app.FragmentTransaction;
 import android.app.Service;
@@ -62,11 +66,11 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	/** Tag for logging */
 	private static final String TAG = "StreamingAudioExample";
 
-	/** Channel configuration */
-	private static final int CHANNEL = AudioFormat.CHANNEL_OUT_DEFAULT;
-
 	/** Encoding choice */
 	private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+
+	/** Number of chunks to buffer before starting playback */
+	private static final int BUFFER_SIZE_IN_CHUNKS = 7;
 
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
@@ -82,6 +86,12 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 
 	/** Tracks sequence number passed to request data */
 	private long sequenceNumber;
+
+	/** Used to execute buffering thread */
+	private ExecutorService executor;
+
+	/** Buffers writes into another thread */
+	private SpeakerWriter buffer;
 
 	/*
 	 * (non-Javadoc)
@@ -319,8 +329,8 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 		Log.d(TAG, "Using buffer size " + bufferSize);
 
 		// Create the recorder.
-		AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, CHANNEL, ENCODING,
-				bufferSize);
+		AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+				AudioFormat.CHANNEL_IN_STEREO, ENCODING, bufferSize);
 		recorder.startRecording();
 
 		long stopTime = System.currentTimeMillis() + (10 * 1000);
@@ -350,10 +360,12 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 	 * @param streamId
 	 */
 	protected void startPlayback(String streamId) {
-		speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, CHANNEL, ENCODING, bufferSize,
-				AudioTrack.MODE_STREAM);
-		speaker.play();
+		speaker = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
+				ENCODING, bufferSize * BUFFER_SIZE_IN_CHUNKS, AudioTrack.MODE_STREAM);
 		sequenceNumber = 0;
+		executor = Executors.newSingleThreadExecutor();
+		buffer = new SpeakerWriter();
+		executor.execute(buffer);
 		try {
 			requestDeviceStreamData(getUniqueDeviceId(), streamId, sequenceNumber);
 		} catch (SiteWhereMessagingException e) {
@@ -374,8 +386,7 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 		byte[] chunk = data.getData().toByteArray();
 		if (chunk.length > 0) {
 			// Push streamed data into AudioTrack.
-			Log.d(TAG, "Playing chunk " + sequenceNumber + " with size " + chunk.length + ".");
-			speaker.write(chunk, 0, bufferSize);
+			buffer.addData(sequenceNumber, chunk);
 			sequenceNumber++;
 
 			// Request next chunk;
@@ -384,10 +395,48 @@ public class StreamingAudioExample extends SiteWhereHybridProtobufActivity imple
 			} catch (SiteWhereMessagingException e) {
 				Log.e(TAG, "Unable to request data from device stream.", e);
 			}
-		} else {
-			speaker.release();
-			speaker = null;
-			Log.d(TAG, "Finished playing stream.");
+		}
+		// speaker.release();
+		// speaker = null;
+		// Log.d(TAG, "Finished playing stream."); }
+	}
+
+	/**
+	 * Queues data to be written to speaker in a separate thread.
+	 * 
+	 * @author Derek
+	 */
+	private class SpeakerWriter implements Runnable {
+
+		/** Queue that acts as a buffer for stream data */
+		private BlockingDeque<byte[]> chunks = new LinkedBlockingDeque<byte[]>();
+
+		public void addData(long seq, byte[] data) {
+			try {
+				Log.d(TAG, "Added chunk " + seq + " with size " + data.length + ".");
+				chunks.put(data);
+			} catch (InterruptedException e) {
+				Log.d(TAG, "SpeakerWriter put interrupted.");
+			}
+		}
+
+		@Override
+		public void run() {
+			long seq = 0;
+			while (true) {
+				try {
+					byte[] chunk = chunks.take();
+					int result = speaker.write(chunk, 0, chunk.length);
+					Log.d(TAG, "Wrote " + result + " bytes of chunk " + seq++ + " (size " + chunk.length
+							+ ").");
+
+					if (seq > BUFFER_SIZE_IN_CHUNKS) {
+						speaker.play();
+					}
+				} catch (InterruptedException e) {
+					Log.d(TAG, "SpeakerWriter take interrupted.");
+				}
+			}
 		}
 	}
 
