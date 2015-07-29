@@ -105,8 +105,8 @@ public abstract class SiteWhereActivity extends Activity {
 	}
 
 	/**
-	 * Attempts to connect to a remote {@link Service} using an {@link Intent} that will match based
-	 * on a filter.
+	 * Attempts to connect to a remote {@link Service} using an {@link Intent} that will match based on a
+	 * filter.
 	 */
 	protected void connectToSiteWhereRemote() {
 		if (!bound) {
@@ -115,6 +115,15 @@ public abstract class SiteWhereActivity extends Activity {
 			startService(intent);
 			bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 		}
+	}
+
+	/**
+	 * Indicates whether SiteWhere connection is established.
+	 * 
+	 * @return
+	 */
+	protected boolean isConnectedToSiteWhere() {
+		return bound;
 	}
 
 	/**
@@ -183,8 +192,7 @@ public abstract class SiteWhereActivity extends Activity {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see
-		 * android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
+		 * @see android.content.ServiceConnection#onServiceDisconnected(android.content.ComponentName)
 		 */
 		public void onServiceDisconnected(ComponentName className) {
 			bound = false;

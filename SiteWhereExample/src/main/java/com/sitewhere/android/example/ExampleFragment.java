@@ -84,7 +84,7 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 	private float[] lastRotation;
 
 	/** Used to schedule a recurring report to SiteWhere for location */
-	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+	private ScheduledExecutorService scheduler;
 
 	/*
 	 * (non-Javadoc)
@@ -132,13 +132,34 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 			getMap().setMyLocationEnabled(true);
 			locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-			scheduler.scheduleAtFixedRate(new LocationReporter(), SEND_INTERVAL_IN_SECONDS,
-					SEND_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
 
 			sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
 			rotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 			sensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_NORMAL);
 		}
+	}
+
+	/**
+	 * Only schedule SiteWhere reporting thread once we have a connection to the server.
+	 */
+	public void onSiteWhereConnected() {
+		Log.d(TAG, "Example fragment now sending data to SiteWhere.");
+		if (scheduler != null) {
+			scheduler.shutdownNow();
+		}
+		scheduler = Executors.newSingleThreadScheduledExecutor();
+		scheduler.scheduleAtFixedRate(new SiteWhereDataReporter(), SEND_INTERVAL_IN_SECONDS,
+				SEND_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * Turn off scheduling when SiteWhere is disconnected.
+	 */
+	public void onSiteWhereDisconnected() {
+		if (scheduler != null) {
+			scheduler.shutdownNow();
+		}
+		Log.d(TAG, "Example fragment no longer sending data to SiteWhere.");
 	}
 
 	/**
@@ -272,11 +293,11 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 	}
 
 	/**
-	 * Runs location reporting in a separate thread.
+	 * Runs data reporting in a separate thread.
 	 * 
 	 * @author Derek
 	 */
-	private class LocationReporter implements Runnable {
+	private class SiteWhereDataReporter implements Runnable {
 
 		@Override
 		public void run() {

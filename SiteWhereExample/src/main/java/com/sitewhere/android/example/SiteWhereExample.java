@@ -58,6 +58,9 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	/** Wizard shown to establish preferences */
 	private ConnectivityWizardFragment wizard;
 
+	/** Fragment with example application */
+	private ExampleFragment example;
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -121,7 +124,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	 */
 	protected void initExampleApplication() {
 		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-		fragmentTransaction.replace(R.id.container, new ExampleFragment());
+		example = new ExampleFragment();
+		fragmentTransaction.replace(R.id.container, example);
 		fragmentTransaction.commit();
 		connectToSiteWhere();
 		getActionBar().setTitle("SiteWhere Example");
@@ -186,6 +190,9 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	@Override
 	protected void onConnectedToSiteWhere() {
 		Log.d(TAG, "Connected to SiteWhere.");
+		if (example != null) {
+			example.onSiteWhereConnected();
+		}
 		try {
 			// This registers with the first Site in the system.
 			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
@@ -195,6 +202,19 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 					"bb105f8d-3150-41f5-b9d1-db04965668d3", null);
 		} catch (SiteWhereMessagingException e) {
 			Log.e(TAG, "Unable to send device registration to SiteWhere.", e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.sitewhere.android.SiteWhereActivity#onDisconnectedFromSiteWhere()
+	 */
+	@Override
+	protected void onDisconnectedFromSiteWhere() {
+		Log.d(TAG, "Disconnected from SiteWhere.");
+		if (example != null) {
+			example.onSiteWhereDisconnected();
 		}
 	}
 
@@ -233,16 +253,6 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	 * com.sitewhere.device.communication.protobuf.proto.Sitewhere.Device.DeviceStreamAck)
 	 */
 	public void handleDeviceStreamAck(Header header, DeviceStreamAck ack) {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.sitewhere.android.SiteWhereActivity#onDisconnectedFromSiteWhere()
-	 */
-	@Override
-	protected void onDisconnectedFromSiteWhere() {
-		Log.d(TAG, "Disconnected from SiteWhere.");
 	}
 
 	/*
