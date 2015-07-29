@@ -190,14 +190,8 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	@Override
 	protected void onConnectedToSiteWhere() {
 		Log.d(TAG, "Connected to SiteWhere.");
-		if (example != null) {
-			example.onSiteWhereConnected();
-		}
 		try {
-			// This registers with the first Site in the system.
-			// registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41", null);
-
-			// This registers with a specific site.
+			// This registers device with a specific site.
 			registerDevice(getUniqueDeviceId(), "d2604433-e4eb-419b-97c7-88efe9b2cd41",
 					"bb105f8d-3150-41f5-b9d1-db04965668d3", null);
 		} catch (SiteWhereMessagingException e) {
@@ -228,6 +222,11 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 	@Override
 	public void handleRegistrationAck(Header header, RegistrationAck ack) {
 		switch (ack.getState()) {
+		case REGISTRATION_ERROR: {
+			Log.d(TAG,
+					"Error registering device. " + ack.getErrorType().name() + ": " + ack.getErrorMessage());
+			return;
+		}
 		case ALREADY_REGISTERED: {
 			Log.d(TAG, "Device was already registered.");
 			break;
@@ -236,11 +235,9 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 			Log.d(TAG, "Device was registered successfully.");
 			break;
 		}
-		case REGISTRATION_ERROR: {
-			Log.d(TAG,
-					"Error registering device. " + ack.getErrorType().name() + ": " + ack.getErrorMessage());
-			break;
 		}
+		if (example != null) {
+			example.onSiteWhereConnected();
 		}
 	}
 
