@@ -222,11 +222,6 @@ public class SiteWhereExample extends SiteWhereProtobufActivity implements IConn
 			break;
 		}
 		}
-		try {
-			sendLocation(getUniqueDeviceId(), null, 1.0, 1.0, 1.0);
-		} catch (SiteWhereMessagingException e) {
-			Log.e(TAG, "Unable to send location.", e);
-		}
 	}
 
 	/*

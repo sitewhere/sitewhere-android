@@ -43,7 +43,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.sitewhere.android.messaging.SiteWhereMessagingException;
 import com.sitewhere.android.protobuf.SiteWhereProtobufActivity;
 
 /**
@@ -121,20 +120,17 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 		super.onActivityCreated(savedInstanceState);
 
 		// Getting Google Play availability status
-		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity()
-				.getBaseContext());
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity().getBaseContext());
 
 		// If Google Play not available, show dialog for dealing with it.
 		if (status != ConnectionResult.SUCCESS) {
 			int requestCode = 10;
-			Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, getActivity(),
-					requestCode);
+			Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, getActivity(), requestCode);
 			dialog.show();
 		} else {
 			hookViews();
 			getMap().setMyLocationEnabled(true);
-			locationManager = (LocationManager) getActivity().getSystemService(
-					Context.LOCATION_SERVICE);
+			locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 			scheduler.scheduleAtFixedRate(new LocationReporter(), SEND_INTERVAL_IN_SECONDS,
 					SEND_INTERVAL_IN_SECONDS, TimeUnit.SECONDS);
@@ -159,25 +155,30 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 	}
 
 	/**
-	 * Sends current location to SiteWhere.
+	 * Sends most recent location and measurements to SiteWhere.
 	 */
-	protected void onSendCurrentLocation() {
-		if (lastLocation != null) {
-			SiteWhereProtobufActivity sw = (SiteWhereProtobufActivity) getActivity();
-			try {
+	protected void onSendDataToSiteWhere() {
+		SiteWhereProtobufActivity sw = (SiteWhereProtobufActivity) getActivity();
+		try {
+			if (lastLocation != null) {
 				sw.sendLocation(sw.getUniqueDeviceId(), null, lastLocation.getLatitude(),
 						lastLocation.getLongitude(), lastLocation.getAltitude());
 				sw.runOnUiThread(new Runnable() {
 
 					@Override
 					public void run() {
-						Toast.makeText(getActivity(), "Sent Location to SiteWhere",
-								Toast.LENGTH_SHORT).show();
+						Toast.makeText(getActivity(), "Sent Location to SiteWhere", Toast.LENGTH_SHORT)
+								.show();
 					}
 				});
-			} catch (SiteWhereMessagingException e) {
-				Log.e(TAG, "Unable to send location to SiteWhere.", e);
 			}
+			if (lastRotation != null) {
+				sw.sendMeasurement(sw.getUniqueDeviceId(), null, "x.rotation", lastRotation[0]);
+				sw.sendMeasurement(sw.getUniqueDeviceId(), null, "y.rotation", lastRotation[1]);
+				sw.sendMeasurement(sw.getUniqueDeviceId(), null, "z.rotation", lastRotation[2]);
+			}
+		} catch (Throwable e) {
+			Log.e(TAG, "Unable to send location to SiteWhere.", e);
 		}
 	}
 
@@ -200,8 +201,8 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 		// For first location reading, center and zoom to location.
 		if (lastLocation == null) {
 			CameraPosition position = getMap().getCameraPosition();
-			CameraPosition.Builder builder = CameraPosition.builder(position).target(latLng)
-					.zoom(15).tilt(45);
+			CameraPosition.Builder builder = CameraPosition.builder(position).target(latLng).zoom(15)
+					.tilt(45);
 			getMap().animateCamera(CameraUpdateFactory.newCameraPosition(builder.build()));
 		} else {
 			getMap().animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
@@ -237,8 +238,7 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see android.location.LocationListener#onStatusChanged(java.lang.String, int,
-	 * android.os.Bundle)
+	 * @see android.location.LocationListener#onStatusChanged(java.lang.String, int, android.os.Bundle)
 	 */
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -280,7 +280,7 @@ public class ExampleFragment extends MapFragment implements LocationListener, Se
 
 		@Override
 		public void run() {
-			onSendCurrentLocation();
+			onSendDataToSiteWhere();
 		}
 	}
 }

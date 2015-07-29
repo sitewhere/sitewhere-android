@@ -126,7 +126,7 @@ public abstract class SiteWhereProtobufActivity extends SiteWhereActivity {
 		Model.DeviceMeasurements.Builder mxsb = Model.DeviceMeasurements.newBuilder();
 		Model.Measurement.Builder mxb = Model.Measurement.newBuilder();
 		mxb.setMeasurementId(name).setMeasurementValue(value);
-		mxsb.addMeasurement(mxb.build());
+		mxsb.setHardwareId(hardwareId).addMeasurement(mxb.build());
 		sendMessage(Command.SEND_DEVICE_MEASUREMENTS, mxsb.build(), originator, "measurement");
 	}
 
