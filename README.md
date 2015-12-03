@@ -1,10 +1,6 @@
-SiteWhere Android Libraries
-===========================
+# **DEPRECATED** SiteWhere Android Libraries
 
-This repository contains libraries that facilitate implementing SiteWhere-aware applications on
-the Android platform.
-
-#### Required Other Package at SiteWhereExample #####
-
-* (ANDROID_SDK_PATH)/extras/google/google_play_service 
-* You need to modify Google Map API v2 API KEY at AndroidManifest.xml
+This repository contains the old SiteWhere Android SDK that was only
+compatible with ADT. The new **sitewhere/sitewhere-android-sdk** 
+repository contains artifacts that are compatible with Android Studio.
+All new development is done in the other repository.
